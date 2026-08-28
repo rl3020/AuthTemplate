@@ -1,23 +1,45 @@
-# Zoomies
+# AuthTemplate
 
-Dog transportation service that picks up dogs from their homes and takes them to grooming appointments, daycare, and other pet care destinations.
+A starting point for Next.js apps that need Supabase auth. It gives you the wiring that's tedious to get right — server/browser/middleware Supabase clients, session refresh on every request, local Postgres via Docker, and a migration pipeline that deploys on merge — so you can start writing your actual app instead of your fifth auth setup.
 
-## Tech Stack
+**Tech stack**
 
-- **Next.js 16** — App Router, TypeScript
-- **CSS Modules** — scoped component styling, no Tailwind
-- **Supabase** — database, auth, storage
-- **Vercel** — deployment
+- **Next.js 16** — App Router, TypeScript, Turbopack
+- **React 19**
+- **CSS Modules** — scoped component styles, no Tailwind
+- **Supabase** — Postgres, auth, storage
+- **Vercel** — deployment target
+
+**What's already wired**
+
+- Supabase clients for all three runtimes (`src/lib/supabase/`)
+- Automatic session refresh via [src/proxy.ts](src/proxy.ts), applied to every non-static route
+- Local Supabase on offset ports, so it won't collide with your other projects
+- GitHub Actions workflow that pushes migrations to production on merge to `main`
+
+**What's not**
+
+There are no sign-in, sign-up, or password-reset pages yet — you get the session plumbing, not the UI. The pages under `src/app/` are placeholder marketing screens left over from the project this was forked from. Delete them and build your own.
 
 ---
 
-## Local Development
+## 0. Prerequisites
 
-### Prerequisites
+| Tool             | Version                           | Notes                                                                   |
+| ---------------- | --------------------------------- | ----------------------------------------------------------------------- |
+| **Node.js**      | 20.19+ (22 LTS or 24 recommended) | Node 20.17 works but emits an engine warning from ESLint's dependencies |
+| **Docker**       | any recent                        | Must be _running_ — Supabase's local stack is containerized             |
+| **Supabase CLI** | 2.x                               | `brew install supabase/tap/supabase`                                    |
 
-- Node.js
-- Docker (for Supabase local)
-- Supabase CLI
+Verify before you start:
+
+```bash
+node -v && docker info > /dev/null && supabase --version
+```
+
+---
+
+## 1. Quick start
 
 ### 1. Install dependencies
 
@@ -25,25 +47,26 @@ Dog transportation service that picks up dogs from their homes and takes them to
 npm install
 ```
 
-### 2. Set up environment variables
-
-Create a `.env.local` file at the project root:
-
-```bash
-# Local Supabase (run `supabase start` to get these values)
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54331
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_local_publishable_key
-```
-
-### 3. Start Supabase locally
+### 2. Start the local Supabase stack
 
 ```bash
 supabase start
 ```
 
-This project runs on offset ports (`54331–54337`) to avoid conflicts with other local Supabase projects. Ports are configured in `supabase/config.toml`.
+First run pulls several GB of Docker images — expect a few minutes. When it finishes it prints your local credentials, including an **API URL** and a **Publishable key**. Keep that output around for the next step.
 
-Once running, copy the `Publishable` key from the output into `.env.local`.
+This project uses ports `54331–54337` instead of Supabase's defaults, configured in [supabase/config.toml](supabase/config.toml), so it can run alongside other local Supabase projects.
+
+### 3. Create `.env.local`
+
+At the project root:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54331
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<paste the Publishable key from step 2>
+```
+
+`.env*` is gitignored — these never get committed.
 
 ### 4. Start the dev server
 
@@ -51,99 +74,102 @@ Once running, copy the `Publishable` key from the output into `.env.local`.
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open **http://localhost:3000**. Supabase Studio is at **http://localhost:54333**.
+
+### Scripts
+
+| Command         | Does                       |
+| --------------- | -------------------------- |
+| `npm run dev`   | Dev server with hot reload |
+| `npm run build` | Production build           |
+| `npm start`     | Serve the production build |
+| `npm run lint`  | ESLint                     |
+
+### Stopping
+
+```bash
+supabase stop           # stops containers, keeps data
+supabase stop --no-backup  # stops and wipes local data
+```
 
 ---
 
-## Supabase Client
+## Supabase clients
 
-Three client helpers live in `src/lib/supabase/`:
+Three helpers in `src/lib/supabase/`, one per runtime. Using the wrong one is the most common source of auth bugs, so pick deliberately:
 
-| File | Use |
-|---|---|
-| `client.ts` | Browser — use in Client Components (`"use client"`) |
-| `server.ts` | Server — use in Server Components, Server Actions, Route Handlers |
-| `proxy.ts` | Middleware utility — handles session refresh |
+| File                                    | Where it runs | Use in                                            |
+| --------------------------------------- | ------------- | ------------------------------------------------- |
+| [client.ts](src/lib/supabase/client.ts) | Browser       | Client Components (`"use client"`)                |
+| [server.ts](src/lib/supabase/server.ts) | Server        | Server Components, Server Actions, Route Handlers |
+| [proxy.ts](src/lib/supabase/proxy.ts)   | Middleware    | Session refresh only — not for queries            |
 
 ```ts
-// Client Component
-const supabase = createClient()
+// Client Component — synchronous
+const supabase = createClient();
 
-// Server Component / Server Action
-const supabase = await createClient()
+// Server Component / Server Action — async, reads the cookie store
+const supabase = await createClient();
 ```
+
+> **Placement matters.** In Next 16, middleware is a file named `proxy.ts` that must sit beside your `app/` directory. Because this project uses `src/app/`, the file lives at `src/proxy.ts`. Put it at the repo root instead and Next compiles it but never runs it — no error, no warning, sessions just silently stop refreshing. Confirm it's active by looking for `ƒ Proxy (Middleware)` in `npm run build` output.
 
 ---
 
-## Database Migrations
+## Database migrations
 
-All schema changes go through migration files — never edit the database directly.
-
-### Create a migration
+Schema changes go through migration files. Don't edit the database directly through Studio — those changes won't reach production.
 
 ```bash
-supabase migration new your_migration_name
-# edit the generated file in supabase/migrations/
+supabase migration new add_profiles_table   # creates supabase/migrations/<timestamp>_add_profiles_table.sql
+# edit the generated file
+supabase db reset                           # rebuilds local DB from every migration, in order
 ```
 
-### Apply locally
-
-```bash
-supabase db reset
-```
-
-This rebuilds your local database from all migrations in order.
+`supabase/migrations/` doesn't exist yet — your first `migration new` creates it.
 
 ---
 
-## CI/CD
+## Deployment
 
-Migrations are automatically deployed to production via GitHub Actions when changes to `supabase/migrations/` are merged into `main`.
+### Vercel
 
-### Required GitHub repository secrets
+Set these in **Project → Settings → Environment Variables**, using values from **Supabase dashboard → Project → Settings → API**:
 
-| Secret | Where to find it |
-|---|---|
-| `SUPABASE_ACCESS_TOKEN` | supabase.com → Account → Access Tokens |
-| `SUPABASE_PROJECT_REF` | supabase.com/dashboard/project/**[ref]** |
-| `SUPABASE_DB_PASSWORD` | Supabase dashboard → Project Settings → Database |
+```
+NEXT_PUBLIC_SUPABASE_URL             = https://<your-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = <your production publishable key>
+```
 
-### Workflow
+### Migration CI
 
-`.github/workflows/migrate.yml` — triggers on push to `main` when migration files change.
+[.github/workflows/migrate.yml](.github/workflows/migrate.yml) runs `supabase db push` on every push to `main` that touches `supabase/migrations/**`. It needs three repository secrets:
+
+| Secret                  | Where to find it                         |
+| ----------------------- | ---------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN` | supabase.com → Account → Access Tokens   |
+| `SUPABASE_PROJECT_REF`  | supabase.com/dashboard/project/**[ref]** |
+| `SUPABASE_DB_PASSWORD`  | Dashboard → Project Settings → Database  |
+
+Until those secrets are set the workflow fails harmlessly — it has no project to connect to.
 
 ---
 
-## Deployment (Vercel)
-
-Add production environment variables in **Vercel → Project → Settings → Environment Variables**:
-
-```
-NEXT_PUBLIC_SUPABASE_URL         = https://yourref.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = your_prod_publishable_key
-```
-
-Find both in **Supabase dashboard → Project → Settings → API**.
-
----
-
-## Project Structure
+## Project structure
 
 ```
 src/
 ├── app/
-│   ├── landingPage/        # Landing page components + CSS Modules
-│   ├── groomer-onboarding/ # Partner signup page
-│   ├── request-pickup/     # Pet owner booking page
-│   └── page.tsx            # Home page
-├── components/
-│   └── icons/              # Shared icon components
-└── lib/
-    └── supabase/           # Supabase client helpers
+│   ├── layout.tsx           # Root layout
+│   ├── page.tsx             # Home
+│   ├── landingPage/         # Placeholder marketing sections — replace these
+│   ├── groomer-onboarding/  # Placeholder page — replace
+│   └── request-pickup/      # Placeholder page — replace
+├── components/icons/        # Shared icon components
+├── lib/supabase/            # Client / server / proxy Supabase helpers
+└── proxy.ts                 # Next 16 middleware — session refresh + route matcher
 supabase/
-├── config.toml             # Local Supabase config (custom ports)
-└── migrations/             # Database migrations
-.github/
-└── workflows/
-    └── migrate.yml         # CI/CD — auto-deploy migrations to prod
+└── config.toml              # Local stack config (offset ports 54331–54337)
+.github/workflows/
+└── migrate.yml              # Auto-deploy migrations on merge to main
 ```
