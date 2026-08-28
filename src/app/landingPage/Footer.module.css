@@ -1,0 +1,77 @@
+.footer {
+  background: #0f172a;
+  padding: 56px 24px 0;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.logo {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.4px;
+}
+
+.tagline {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.45);
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+.links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.links a {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  transition: color 0.15s, background 0.15s;
+}
+
+.links a:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.bottom {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.bottom p {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 640px) {
+  .container {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .links {
+    gap: 4px;
+  }
+}

@@ -1,0 +1,144 @@
+.section {
+  padding: 96px 24px;
+  background: var(--bg);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.label {
+  display: inline-flex;
+  padding: 5px 14px;
+  background: var(--orange-light);
+  color: var(--orange);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.heading {
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.75px;
+  line-height: 1.2;
+  color: var(--text-dark);
+}
+
+.subheading {
+  font-size: 1.05rem;
+  color: var(--text-light);
+  max-width: 400px;
+}
+
+/* ── Steps grid ───────────────────────────── */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  position: relative;
+}
+
+/* Dashed connector between steps */
+.steps::before {
+  content: "";
+  position: absolute;
+  top: 44px; /* center of icon */
+  left: calc(100% / 6 + 8px);
+  right: calc(100% / 6 + 8px);
+  height: 0;
+  border-top: 2px dashed var(--border);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.iconWrap {
+  position: relative;
+  z-index: 1;
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-xl);
+  background: var(--orange-light);
+  border: 2px solid rgba(255, 107, 53, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.step:hover .iconWrap {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: var(--shadow-md);
+}
+
+.icon {
+  line-height: 1;
+}
+
+.number {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--white);
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.desc {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  line-height: 1.65;
+  max-width: 260px;
+}
+
+/* ── Responsive ───────────────────────────── */
+
+@media (max-width: 680px) {
+  .steps {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+    gap: 48px;
+  }
+
+  .steps::before {
+    display: none;
+  }
+}
