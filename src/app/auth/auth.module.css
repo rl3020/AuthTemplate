@@ -6,18 +6,64 @@
   padding: 1.5rem;
 }
 
+.page {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+}
+
 .card {
   width: 100%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 600;
   margin: 0;
+}
+
+/* A pill-shaped track sitting inside the card (not bled to its edges) —
+   the active segment floats as a white pill with a soft shadow inside it. */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-full);
+}
+
+.tab {
+  flex: 1;
+  padding: 0.625rem 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.tabActive {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .subtitle {

@@ -39,6 +39,18 @@ export function SignUpForm() {
         />
       </div>
 
+      <div className={styles.field}>
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          required
+        />
+      </div>
+
       <button className={styles.submit} type="submit" disabled={pending}>
         {pending ? "Creating account…" : "Sign up"}
       </button>
