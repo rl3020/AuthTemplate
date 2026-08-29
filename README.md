@@ -1,5 +1,20 @@
 # AuthTemplate
 
+## Quickstart
+
+Requires [Docker](https://www.docker.com/) running and the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) (`brew install supabase/tap/supabase`).
+
+```bash
+npm install
+supabase start                 # prints a Publishable key — copy it
+cp .env.example .env.local      # paste the key into NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+npm run dev
+```
+
+Open **http://localhost:3000**. See [Prerequisites](#0-prerequisites) below for version details, or the full walkthrough at [Quick start](#1-quick-start).
+
+---
+
 A starting point for Next.js apps that need Supabase auth. It gives you the wiring that's tedious to get right — server/browser/middleware Supabase clients, session refresh on every request, local Postgres via Docker, and a migration pipeline that deploys on merge — so you can start writing your actual app instead of your fifth auth setup.
 
 **Tech stack**
