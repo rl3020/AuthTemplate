@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zoomies",
+  title: "AuthTemplate",
   description:
-    "Zoomies picks up your dog and takes them to grooming, daycare, and more — so you don't have to drive.",
+    "A Next.js starting point with Supabase auth already wired up.",
 };
 
 export default function RootLayout({
