@@ -21,6 +21,25 @@ type Section = {
   steps: Step[];
 };
 
+// Mirrors supabase/migrations/20260830005405_init.sql, shown here so
+// "your first migration" means the one already in the repo, not a new one.
+const initMigrationSql = [
+  "create table public.profiles (",
+  "  id uuid primary key references auth.users(id) on delete cascade,",
+  "  display_name text",
+  ");",
+  "",
+  "alter table public.profiles enable row level security;",
+  "",
+  'create policy "Users can view their own profile"',
+  "  on public.profiles for select",
+  "  using (auth.uid() = id);",
+  "",
+  'create policy "Users can update their own profile"',
+  "  on public.profiles for update",
+  "  using (auth.uid() = id);",
+];
+
 const sections: Section[] = [
   {
     heading: "Prerequisites",
@@ -63,11 +82,15 @@ const sections: Section[] = [
       {
         title: "Install dependencies and start local Supabase",
         description:
-          "npm install also installs the Supabase CLI — it's a project dependency, not something you install globally — so every supabase command here runs through npx.",
+          "Pulls down Next.js, React, the Supabase client libraries, and the Supabase CLI itself (it's a project dependency, not something you install globally — every supabase command here runs through npx). See package.json for the full list.",
+        href: "https://github.com/rl3020/AuthTemplate/blob/main/package.json",
+        linkLabel: "package.json",
         commands: ["npm install", "npx supabase start"],
       },
       {
         title: "Set up your env file and run the app",
+        description:
+          "Copies .env.example to .env.local, then paste in the Publishable key that supabase start just printed. npm run dev starts the Next.js dev server, which reads that file and talks to your local Supabase stack — so sign-up/login work against the database Docker just started, not a production one.",
         commands: ["cp .env.example .env.local", "npm run dev"],
       },
     ],
@@ -100,26 +123,46 @@ const sections: Section[] = [
     steps: [
       {
         title: "Add three repository secrets",
-        description: "Repo → Settings → Secrets and variables → Actions. Names must match exactly:",
+        description:
+          "The migration workflow below needs these to authenticate as you and find your project when it runs supabase db push — without them it fails with no way to reach your database. Add them at Repo → Settings → Secrets and variables → Actions, in your GitHub repo (not this template's). Names must match exactly:",
         panelLabel: "GitHub Secrets",
         commands: [
           "SUPABASE_ACCESS_TOKEN",
           "SUPABASE_PROJECT_REF",
           "SUPABASE_DB_PASSWORD",
         ],
+        href: "https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository",
+        linkLabel: "GitHub docs: creating repository secrets",
       },
     ],
   },
   {
-    heading: "Push your first migration",
+    heading: "Your first migration is already here",
     steps: [
       {
-        title: "Create and verify a migration locally",
-        commands: ["npx supabase migration new init", "npx supabase db reset"],
+        title: "This template ships one migration — you don't need to create it",
+        description:
+          "It's what created the profiles table you saw in \"What's included\": Row Level Security enabled, plus policies so each user can only read/update their own row.",
+        panelLabel: "supabase/migrations/20260830005405_init.sql",
+        commands: initMigrationSql,
       },
       {
-        title: "Push it — this triggers the migration workflow",
-        commands: ["git add supabase/migrations", "git commit -m \"Add migration\"", "git push"],
+        title: "It goes live the first time the workflow runs",
+        description:
+          "The GitHub Action above applies every file in supabase/migrations/ with supabase db push whenever main gets a commit touching that folder. This migration was already committed before you added the secrets, so re-run the workflow now from your repo's Actions tab — or just wait: the next real migration you push will bring this one along with it, since db push applies everything not yet applied, not just what changed.",
+        href: "https://docs.github.com/en/actions/managing-workflow-runs/re-running-workflows-and-jobs",
+        linkLabel: "GitHub docs: re-running a workflow",
+      },
+      {
+        title: "Adding your own migration later looks like this",
+        panelLabel: "Example: your next migration",
+        commands: [
+          "npx supabase migration new add_posts_table",
+          "npx supabase db reset",
+          "git add supabase/migrations",
+          'git commit -m "Add posts table"',
+          "git push",
+        ],
       },
     ],
   },
@@ -134,7 +177,7 @@ const sections: Section[] = [
       {
         title: "Add environment variables",
         description:
-          "You won't know the site URL until after the first deploy — add it and redeploy once you do.",
+          "NEXT_PUBLIC_SUPABASE_URL is your hosted project's API URL; NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is the public key from Project Settings → API (safe to expose client-side — it's not a secret); NEXT_PUBLIC_SITE_URL is your production domain, used to build the confirmation email link. You won't know that last one until after the first deploy — add it and redeploy once you do.",
         panelLabel: "Vercel Env Vars",
         commands: [
           "NEXT_PUBLIC_SUPABASE_URL",

@@ -26,10 +26,10 @@ export function CodePanel({ label, lines }: { label: string; lines: string[] }) 
       </div>
       <pre className={styles.panelBody}>
         <code>
-          {lines.map((line) => {
+          {lines.map((line, index) => {
             const [first, ...rest] = line.split(" ");
             return (
-              <div key={line}>
+              <div key={index}>
                 <span className={styles.panelKeyword}>{first}</span>
                 {rest.length > 0 ? ` ${rest.join(" ")}` : ""}
               </div>
