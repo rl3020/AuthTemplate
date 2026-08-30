@@ -1,0 +1,19 @@
+.toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-muted);
+  font-size: 1.125rem;
+}
+
+.toggle:hover {
+  background: var(--border);
+}

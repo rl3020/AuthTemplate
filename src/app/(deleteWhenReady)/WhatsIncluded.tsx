@@ -1,5 +1,8 @@
 // Part of the (deleteWhenReady) route group — delete the whole folder.
 
+"use client";
+
+import { useState } from "react";
 import styles from "@/app/(deleteWhenReady)/page.module.css";
 
 type Node = {
@@ -43,6 +46,8 @@ const nodes: Node[] = [
   { depth: 1, name: "proxy.ts", type: "file", note: "Session refresh + route gating" },
 ];
 
+const COLLAPSED_MAX_HEIGHT = 280;
+
 function FolderIcon() {
   return (
     <svg
@@ -77,34 +82,80 @@ function FileIcon() {
 }
 
 export function WhatsIncluded() {
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <section className={styles.included}>
       <h2 className={styles.sectionHeading}>What&apos;s included</h2>
       <p className={styles.includedCaption}>
         Everything not marked &quot;delete when ready&quot; is the actual
-        template — keep it.
+        template — keep it. Click a file or folder with a 💡 for details.
       </p>
-      <div className={styles.tree}>
-        {nodes.map((node) => (
-          <div key={`${node.depth}-${node.name}`} className={styles.treeRow}>
-            <span
-              className={styles.treePath}
-              style={{ paddingLeft: `${node.depth * 1.125}rem` }}
-            >
-              {node.type === "folder" ? <FolderIcon /> : <FileIcon />}
-              {node.name}
-            </span>
-            {node.note && (
-              <span className={styles.treeNote}>
-                # {node.note}
-                {node.deletable && (
-                  <span className={styles.treeDelete}> · delete when ready</span>
+      <div className={styles.treeWrap}>
+        <div
+          className={styles.tree}
+          style={!expanded ? { maxHeight: COLLAPSED_MAX_HEIGHT, overflowY: "hidden" } : undefined}
+        >
+          {nodes.map((node, index) => {
+            const key = `${index}-${node.name}`;
+            const isOpen = openKey === key;
+            const icon = node.type === "folder" ? <FolderIcon /> : <FileIcon />;
+
+            return (
+              <div key={key} className={styles.treeRow}>
+                {node.note ? (
+                  <button
+                    type="button"
+                    className={styles.treePathButton}
+                    style={{ paddingLeft: `${node.depth * 1.125}rem` }}
+                    onClick={() => setOpenKey(isOpen ? null : key)}
+                    aria-expanded={isOpen}
+                  >
+                    {icon}
+                    {node.name}
+                    <span className={styles.hintBulb} aria-hidden="true">💡</span>
+                  </button>
+                ) : (
+                  <span
+                    className={styles.treePath}
+                    style={{ paddingLeft: `${node.depth * 1.125}rem` }}
+                  >
+                    {icon}
+                    {node.name}
+                  </span>
                 )}
-              </span>
-            )}
-          </div>
-        ))}
+                {isOpen && node.note && (
+                  <div className={styles.bubble} role="note">
+                    <button
+                      type="button"
+                      className={styles.bubbleClose}
+                      onClick={() => setOpenKey(null)}
+                      aria-label="Close note"
+                    >
+                      ×
+                    </button>
+                    <p className={styles.bubbleText}>
+                      {node.note}
+                      {node.deletable && (
+                        <span className={styles.treeDelete}> · delete when ready</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {!expanded && <div className={styles.treeFade} />}
       </div>
+      <button
+        type="button"
+        className={styles.expandButton}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? "Show less" : "Show all files"}
+      </button>
     </section>
   );
 }

@@ -7,6 +7,7 @@ import styles from "@/app/(deleteWhenReady)/page.module.css";
 type Step = {
   title: string;
   description?: string;
+  note?: string;
   href?: string;
   linkLabel?: string;
   panelLabel?: string;
@@ -21,6 +22,35 @@ type Section = {
 };
 
 const sections: Section[] = [
+  {
+    heading: "Prerequisites",
+    steps: [
+      {
+        title: "Install Node.js",
+        description: "Version 20.19 or newer (22 or 24 LTS recommended).",
+        href: "https://nodejs.org/en/download",
+        linkLabel: "nodejs.org",
+        commands: ["node -v"],
+      },
+      {
+        title: "Install Docker Desktop and make sure it's running",
+        description:
+          "Supabase's local stack (Postgres, auth, storage) runs inside Docker containers on your machine — the commands below need it running in the background.",
+        note:
+          "New to Docker? It's a tool that packages a program together with everything it needs to run into a self-contained \"container,\" so it behaves the same on any machine — think of it like a lightweight virtual machine. You don't need to learn it to use this template: install Docker Desktop, open the app once so it's running (you'll see its icon in your menu bar/taskbar), and leave it running in the background. Nothing else in this guide asks you to touch it directly.",
+        href: "https://docs.docker.com/get-docker/",
+        linkLabel: "Get Docker",
+        commands: ["docker info"],
+      },
+      {
+        title: "Install the Supabase CLI",
+        description: "Runs the local stack and manages database migrations.",
+        href: "https://supabase.com/docs/guides/local-development/cli/getting-started",
+        linkLabel: "Install the Supabase CLI",
+        commands: ["brew install supabase/tap/supabase"],
+      },
+    ],
+  },
   {
     heading: "Get the code",
     steps: [
@@ -39,9 +69,6 @@ const sections: Section[] = [
     steps: [
       {
         title: "Install dependencies and start local Supabase",
-        description: "Docker must be running. Requires the Supabase CLI.",
-        href: "https://supabase.com/docs/guides/local-development/cli/getting-started",
-        linkLabel: "Install the Supabase CLI",
         commands: ["npm install", "supabase start"],
       },
       {
@@ -164,6 +191,12 @@ export function SetupGuide() {
                       <p className={styles.stepHeading}>{step.title}</p>
                       {step.description && (
                         <p className={styles.stepBody}>{step.description}</p>
+                      )}
+                      {step.note && (
+                        <div className={styles.calloutNote}>
+                          <span aria-hidden="true">💡</span>
+                          <p>{step.note}</p>
+                        </div>
                       )}
                       {step.href && (
                         <Link
