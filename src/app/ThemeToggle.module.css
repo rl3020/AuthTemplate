@@ -1,3 +1,5 @@
+/* A slider-style switch: sun and moon sit at fixed ends of the track, and
+   a round thumb slides to whichever one matches the active theme. */
 .toggle {
   position: fixed;
   top: 1rem;
@@ -5,15 +7,36 @@
   z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  justify-content: space-between;
+  width: 3.75rem;
+  height: 2rem;
+  padding: 0 0.375rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   background: var(--surface-muted);
-  font-size: 1.125rem;
 }
 
 .toggle:hover {
   background: var(--border);
+}
+
+.icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.thumb {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--surface-active);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.thumbDark {
+  transform: translateX(1.875rem);
 }

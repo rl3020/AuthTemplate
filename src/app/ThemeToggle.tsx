@@ -47,14 +47,20 @@ export function ThemeToggle() {
     }
   }
 
+  const isDark = theme === "dark";
+
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={isDark}
       className={styles.toggle}
       onClick={toggle}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      {theme === "dark" ? "☀️" : "🌙"}
+      <span className={styles.icon} aria-hidden="true">☀️</span>
+      <span className={styles.icon} aria-hidden="true">🌙</span>
+      <span className={`${styles.thumb} ${isDark ? styles.thumbDark : ""}`} aria-hidden="true" />
     </button>
   );
 }
