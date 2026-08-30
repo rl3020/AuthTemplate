@@ -7,11 +7,14 @@
 }
 
 :root {
+  color-scheme: light;
+
   --fg: #171717;
   --fg-muted: #666666;
   --bg: #ffffff;
   --border: #d4d4d4;
   --surface-muted: #f0f0f0;
+  --surface-active: #ffffff;
 
   --danger-bg: #fef2f2;
   --danger-fg: #991b1b;
@@ -34,11 +37,14 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --fg: #f2f2f2;
   --fg-muted: #a3a3a3;
   --bg: #0a0a0a;
   --border: #2e2e2e;
   --surface-muted: #171717;
+  --surface-active: #2a2a2a;
 
   --danger-bg: #3f1414;
   --danger-fg: #fca5a5;
@@ -60,11 +66,14 @@
    [data-theme] (set by ThemeToggle, persisted to localStorage) always wins. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+
     --fg: #f2f2f2;
     --fg-muted: #a3a3a3;
     --bg: #0a0a0a;
     --border: #2e2e2e;
     --surface-muted: #171717;
+    --surface-active: #2a2a2a;
 
     --danger-bg: #3f1414;
     --danger-fg: #fca5a5;
