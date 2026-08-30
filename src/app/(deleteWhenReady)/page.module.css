@@ -293,7 +293,7 @@
 
 .timelineRow {
   display: grid;
-  grid-template-columns: 32px 1fr;
+  grid-template-columns: 32px minmax(0, 1fr);
   column-gap: 1.75rem;
   align-items: start;
 }
@@ -303,15 +303,22 @@
   z-index: 1;
 }
 
+/* min-width: 0 on every grid item in this chain (down through .stepRight)
+   is load-bearing: without it, a long unbroken line deep inside (a
+   terminal command) forces this whole column to grow to fit it — the
+   overflow-x: auto further down doesn't help, since grid/flex items default
+   to min-width: auto and won't shrink past their content's intrinsic size. */
 .stepRow {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
+  min-width: 0;
 }
 
 .stepRowSolo {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
@@ -358,6 +365,33 @@
   font-size: 0.9375rem;
 }
 
+.bulletList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.bulletList li {
+  position: relative;
+  padding-left: 1rem;
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+}
+
+.bulletList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
 .calloutNote {
   display: flex;
   gap: 0.625rem;
@@ -376,6 +410,14 @@
 .calloutNote p {
   margin: 0;
   font-size: 0.875rem;
+  color: var(--success-fg);
+}
+
+.calloutNote .bulletList {
+  margin-top: 0.5rem;
+}
+
+.calloutNote .bulletList li {
   color: var(--success-fg);
 }
 
@@ -417,6 +459,13 @@
   color: var(--panel-fg-muted);
 }
 
+/* min-width: 0 lets a long, spaceless label (a file path) shrink and wrap
+   instead of forcing the flex row — and everything above it — wider. */
+.panelLabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .panelBody {
   padding: 1rem;
   font-family: var(--font-geist-mono);
@@ -433,6 +482,7 @@
 
 .panelCopy,
 .panelCopyCopied {
+  flex-shrink: 0;
   padding: 0.1875rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;

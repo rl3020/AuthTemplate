@@ -15,7 +15,7 @@ export function CodePanel({ label, lines }: { label: string; lines: string[] }) 
   return (
     <div className={styles.panel}>
       <div className={styles.panelHeader}>
-        <span>{label}</span>
+        <span className={styles.panelLabel}>{label}</span>
         <button
           type="button"
           className={copied ? styles.panelCopyCopied : styles.panelCopy}

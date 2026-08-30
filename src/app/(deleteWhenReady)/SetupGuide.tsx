@@ -7,7 +7,9 @@ import styles from "@/app/(deleteWhenReady)/page.module.css";
 type Step = {
   title: string;
   description?: string;
+  bullets?: string[];
   note?: string;
+  noteBullets?: string[];
   href?: string;
   linkLabel?: string;
   panelLabel?: string;
@@ -54,9 +56,14 @@ const sections: Section[] = [
       {
         title: "Install Docker Desktop and make sure it's running",
         description:
-          "Supabase's local stack (Postgres, auth, storage) runs inside Docker containers on your machine — the commands below need it running in the background.",
+          "Supabase's local stack (Postgres, auth, storage) runs inside Docker containers on your machine.",
         note:
-          "New to Docker? It's a tool that packages a program together with everything it needs to run into a self-contained \"container,\" so it behaves the same on any machine — think of it like a lightweight virtual machine. You don't need to learn it to use this template: install Docker Desktop, open the app once so it's running (you'll see its icon in your menu bar/taskbar), and leave it running in the background. Nothing else in this guide asks you to touch it directly.",
+          "New to Docker? It packages a program with everything it needs into a self-contained \"container,\" like a lightweight virtual machine. You don't need to learn it — just:",
+        noteBullets: [
+          "Install Docker Desktop",
+          "Open it once so it's running (look for its icon in your menu bar/taskbar)",
+          "Leave it running in the background — nothing else in this guide asks you to touch it directly",
+        ],
         href: "https://docs.docker.com/get-docker/",
         linkLabel: "Get Docker",
         commands: ["docker info"],
@@ -81,16 +88,22 @@ const sections: Section[] = [
     steps: [
       {
         title: "Install dependencies and start local Supabase",
-        description:
-          "Pulls down Next.js, React, the Supabase client libraries, and the Supabase CLI itself (it's a project dependency, not something you install globally — every supabase command here runs through npx). See package.json for the full list.",
+        description: "npm install pulls down (see package.json for the full list):",
+        bullets: [
+          "Next.js and React — the framework",
+          "The Supabase client libraries",
+          "The Supabase CLI itself — a project dependency, not a global install, so every supabase command here runs through npx",
+        ],
         href: "https://github.com/rl3020/AuthTemplate/blob/main/package.json",
         linkLabel: "package.json",
         commands: ["npm install", "npx supabase start"],
       },
       {
         title: "Set up your env file and run the app",
-        description:
-          "Copies .env.example to .env.local, then paste in the Publishable key that supabase start just printed. npm run dev starts the Next.js dev server, which reads that file and talks to your local Supabase stack — so sign-up/login work against the database Docker just started, not a production one.",
+        bullets: [
+          "cp copies .env.example to .env.local — paste in the Publishable key that supabase start just printed",
+          "npm run dev starts the Next.js dev server, which reads that file and talks to your local Supabase stack, not a production one",
+        ],
         commands: ["cp .env.example .env.local", "npm run dev"],
       },
     ],
@@ -124,7 +137,11 @@ const sections: Section[] = [
       {
         title: "Add three repository secrets",
         description:
-          "The migration workflow below needs these to authenticate as you and find your project when it runs supabase db push — without them it fails with no way to reach your database. Add them at Repo → Settings → Secrets and variables → Actions, in your GitHub repo (not this template's). Names must match exactly:",
+          "The migration workflow below needs these to authenticate as you and reach your database — without them it fails with no way to connect.",
+        bullets: [
+          "Add them at: your GitHub repo → Settings → Secrets and variables → Actions (your repo, not this template's)",
+          "Names must match exactly — see the panel",
+        ],
         panelLabel: "GitHub Secrets",
         commands: [
           "SUPABASE_ACCESS_TOKEN",
@@ -149,7 +166,11 @@ const sections: Section[] = [
       {
         title: "It goes live the first time the workflow runs",
         description:
-          "The GitHub Action above applies every file in supabase/migrations/ with supabase db push whenever main gets a commit touching that folder. This migration was already committed before you added the secrets, so re-run the workflow now from your repo's Actions tab — or just wait: the next real migration you push will bring this one along with it, since db push applies everything not yet applied, not just what changed.",
+          "The GitHub Action above applies every file in supabase/migrations/ with supabase db push whenever main gets a commit touching that folder. This one was already committed before you added the secrets, so:",
+        bullets: [
+          "Re-run the workflow now from your repo's Actions tab, or",
+          "Just wait — your next real migration will bring this one along too, since db push applies everything not yet applied, not just what changed",
+        ],
         href: "https://docs.github.com/en/actions/managing-workflow-runs/re-running-workflows-and-jobs",
         linkLabel: "GitHub docs: re-running a workflow",
       },
@@ -176,8 +197,11 @@ const sections: Section[] = [
       },
       {
         title: "Add environment variables",
-        description:
-          "NEXT_PUBLIC_SUPABASE_URL is your hosted project's API URL; NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is the public key from Project Settings → API (safe to expose client-side — it's not a secret); NEXT_PUBLIC_SITE_URL is your production domain, used to build the confirmation email link. You won't know that last one until after the first deploy — add it and redeploy once you do.",
+        bullets: [
+          "NEXT_PUBLIC_SUPABASE_URL — your hosted project's API URL",
+          "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY — the public key from Project Settings → API (safe to expose client-side — it's not a secret)",
+          "NEXT_PUBLIC_SITE_URL — your production domain, used to build the confirmation email link. You won't know this until after the first deploy — add it and redeploy once you do",
+        ],
         panelLabel: "Vercel Env Vars",
         commands: [
           "NEXT_PUBLIC_SUPABASE_URL",
@@ -193,9 +217,12 @@ const sections: Section[] = [
       {
         title: "Configure a real SMTP provider before you launch",
         description:
-          "Supabase's built-in mailer works out of the box for confirmation emails, but it's rate-limited project-wide — a couple of emails per hour, not per user — which is fine for testing and too low for real signups.",
-        note:
-          "Fix: Authentication → Emails → SMTP Settings, point it at your own provider (Resend, SendGrid, Postmark all have free tiers), then raise the rate limit under Authentication → Rate Limits. You're still using Supabase Auth — you're just supplying the outbound email server instead of borrowing their shared one.",
+          "Supabase's built-in mailer works out of the box, but it's rate-limited project-wide — a couple of emails per hour, not per user. Fine for testing, too low for real signups.",
+        note: "Fix — you're still using Supabase Auth, just supplying your own outbound email server:",
+        noteBullets: [
+          "Authentication → Emails → SMTP Settings — point it at your own provider (Resend, SendGrid, Postmark all have free tiers)",
+          "Authentication → Rate Limits — raise the limit yourself once you're on your own SMTP",
+        ],
         href: "https://supabase.com/docs/guides/auth/auth-smtp",
         linkLabel: "Supabase SMTP docs",
       },
@@ -239,10 +266,26 @@ export function SetupGuide() {
                       {step.description && (
                         <p className={styles.stepBody}>{step.description}</p>
                       )}
+                      {step.bullets && (
+                        <ul className={styles.bulletList}>
+                          {step.bullets.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      )}
                       {step.note && (
                         <div className={styles.calloutNote}>
                           <span aria-hidden="true">💡</span>
-                          <p>{step.note}</p>
+                          <div>
+                            <p>{step.note}</p>
+                            {step.noteBullets && (
+                              <ul className={styles.bulletList}>
+                                {step.noteBullets.map((item) => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
                         </div>
                       )}
                       {step.href && (

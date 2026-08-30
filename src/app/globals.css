@@ -93,6 +93,10 @@
 }
 
 html {
+  /* Belt-and-suspenders alongside body's overflow-x: hidden below — some
+     mobile browsers' elastic overscroll can still bleed through if only
+     one of the two has it set. */
+  overflow-x: hidden;
   font-size: 16px;
   scroll-behavior: smooth;
 }
