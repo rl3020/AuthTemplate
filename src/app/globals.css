@@ -16,16 +16,39 @@
   --danger-bg: #fef2f2;
   --danger-fg: #991b1b;
 
+  --folder: #7dabf8;
+  --warn: #b45309;
+  --success-bg: #f0fdf4;
+  --success-fg: #16a34a;
+
+  --panel-bg: #0b0f19;
+  --panel-header-bg: #141a29;
+  --panel-border: #232b3d;
+  --panel-fg: #e2e8f0;
+  --panel-fg-muted: #8b94a8;
+  --panel-command: #f472b6;
+
   --radius: 0.75rem;
   --radius-full: 9999px;
-  --max-width: 1140px;
+  --max-width: 1320px;
 }
 
 html {
+  font-size: 16px;
   scroll-behavior: smooth;
 }
 
+@media (min-width: 960px) {
+  html {
+    font-size: 17.5px;
+  }
+}
+
 body {
+  /* Safety net: nothing should ever cause horizontal page scroll — this
+     catches decorative elements that bleed past their container (like the
+     header's background grid) without having to get every one exactly right. */
+  overflow-x: hidden;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg);

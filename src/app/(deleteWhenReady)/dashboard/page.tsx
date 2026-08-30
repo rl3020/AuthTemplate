@@ -1,3 +1,6 @@
+// Example protected page — part of the (deleteWhenReady) route group.
+// Shows the requireUser() pattern; replace with your real protected pages.
+
 import { requireUser } from "@/lib/auth/session";
 import { signOut } from "@/lib/auth/actions";
 import styles from "@/app/auth/auth.module.css";
