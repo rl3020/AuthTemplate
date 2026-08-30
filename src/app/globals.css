@@ -54,12 +54,12 @@
   --success-bg: #052e16;
   --success-fg: #4ade80;
 
-  --panel-bg: #05070d;
-  --panel-header-bg: #0d1220;
-  --panel-border: #1c2436;
+  --panel-bg: #10141f;
+  --panel-header-bg: #1c2436;
+  --panel-border: #384863;
   --panel-fg: #e2e8f0;
-  --panel-fg-muted: #8b94a8;
-  --panel-command: #f472b6;
+  --panel-fg-muted: #9aa5bd;
+  --panel-command: #f9a8d4;
 }
 
 /* Falls back to the system preference until the visitor picks explicitly —
@@ -83,12 +83,12 @@
     --success-bg: #052e16;
     --success-fg: #4ade80;
 
-    --panel-bg: #05070d;
-    --panel-header-bg: #0d1220;
-    --panel-border: #1c2436;
+    --panel-bg: #10141f;
+    --panel-header-bg: #1c2436;
+    --panel-border: #384863;
     --panel-fg: #e2e8f0;
-    --panel-fg-muted: #8b94a8;
-    --panel-command: #f472b6;
+    --panel-fg-muted: #9aa5bd;
+    --panel-command: #f9a8d4;
   }
 }
 
