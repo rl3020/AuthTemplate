@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signUp } from "@/lib/auth/actions";
 import { initialAuthActionState } from "@/lib/auth/types";
+import { PasswordField } from "@/app/auth/PasswordField";
 import styles from "@/app/auth/auth.module.css";
 
 export function SignUpForm() {
@@ -27,29 +28,21 @@ export function SignUpForm() {
         />
       </div>
 
-      <div className={styles.field}>
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
-      </div>
+      <PasswordField
+        id="password"
+        name="password"
+        label="Password"
+        autoComplete="new-password"
+        minLength={8}
+      />
 
-      <div className={styles.field}>
-        <label htmlFor="confirmPassword">Confirm Password</label>
-        <input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
-      </div>
+      <PasswordField
+        id="confirmPassword"
+        name="confirmPassword"
+        label="Confirm Password"
+        autoComplete="new-password"
+        minLength={8}
+      />
 
       <button className={styles.submit} type="submit" disabled={pending}>
         {pending ? "Creating account…" : "Sign up"}

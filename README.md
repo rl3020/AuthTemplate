@@ -2,11 +2,11 @@
 
 ## Quickstart
 
-Requires [Docker](https://www.docker.com/) running and the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) (`brew install supabase/tap/supabase`).
+Requires [Docker](https://www.docker.com/) running. The [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) is already a project dependency — `npm install` gets it, no separate/global install needed.
 
 ```bash
 npm install
-supabase start                 # prints a Publishable key — copy it
+npx supabase start             # prints a Publishable key — copy it
 cp .env.example .env.local      # paste the key into NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 npm run dev
 ```
@@ -48,16 +48,17 @@ The home page (`src/app/(deleteWhenReady)/page.tsx`) and everything else in that
 
 ## 0. Prerequisites
 
-| Tool             | Version                           | Notes                                                                   |
-| ---------------- | --------------------------------- | ----------------------------------------------------------------------- |
-| **Node.js**      | 20.19+ (22 LTS or 24 recommended) | Node 20.17 works but emits an engine warning from ESLint's dependencies |
-| **Docker**       | any recent                        | Must be _running_ — Supabase's local stack is containerized             |
-| **Supabase CLI** | 2.x                               | `brew install supabase/tap/supabase`                                    |
+| Tool         | Version                           | Notes                                                                   |
+| ------------ | --------------------------------- | ------------------------------------------------------------------------ |
+| **Node.js**  | 20.19+ (22 LTS or 24 recommended) | Node 20.17 works but emits an engine warning from ESLint's dependencies |
+| **Docker**   | any recent                        | Must be _running_ — Supabase's local stack is containerized             |
+
+The Supabase CLI is a `devDependency` in [package.json](package.json), not a global install — `npm install` pulls a version pinned to this repo, and every command runs through `npx supabase ...` so you never need Homebrew, Scoop, or a standalone binary.
 
 Verify before you start:
 
 ```bash
-node -v && docker info > /dev/null && supabase --version
+node -v && docker info > /dev/null && npx supabase --version
 ```
 
 ---
@@ -73,7 +74,7 @@ npm install
 ### 2. Start the local Supabase stack
 
 ```bash
-supabase start
+npx supabase start
 ```
 
 First run pulls several GB of Docker images — expect a few minutes. When it finishes it prints your local credentials, including an **API URL** and a **Publishable key**. Keep that output around for the next step.
@@ -116,8 +117,8 @@ Open **http://localhost:3000**. Supabase Studio is at **http://localhost:54333**
 ### Stopping
 
 ```bash
-supabase stop           # stops containers, keeps data
-supabase stop --no-backup  # stops and wipes local data
+npx supabase stop           # stops containers, keeps data
+npx supabase stop --no-backup  # stops and wipes local data
 ```
 
 ---
@@ -170,6 +171,8 @@ function MyLoginForm() {
 - **Email confirmations on** (typical in production) — no session yet. Redirects to `/sign-up/check-email`. The confirmation link points at [src/app/auth/confirm/route.ts](src/app/auth/confirm/route.ts), which verifies the token and redirects to `/dashboard`.
 
 The confirmation link is built from `NEXT_PUBLIC_SITE_URL` (see `.env.example`) — set it to your real domain in production, and add that domain to **Supabase dashboard → Authentication → URL Configuration → Redirect URLs**, or the link will be rejected.
+
+**Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. Fix it under **Authentication → Emails → SMTP Settings** with your own provider (Resend, SendGrid, Postmark), then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
 
 ### Routing
 
@@ -254,9 +257,9 @@ const supabase = await createClient();
 Schema changes go through migration files. Don't edit the database directly through Studio — those changes won't reach production.
 
 ```bash
-supabase migration new add_posts_table   # creates supabase/migrations/<timestamp>_add_posts_table.sql
+npx supabase migration new add_posts_table   # creates supabase/migrations/<timestamp>_add_posts_table.sql
 # edit the generated file
-supabase db reset                        # rebuilds local DB from every migration, in order
+npx supabase db reset                        # rebuilds local DB from every migration, in order
 ```
 
 [supabase/migrations/20260830005405_init.sql](supabase/migrations/20260830005405_init.sql) is the one migration already here — it creates `profiles` with RLS and the auto-create trigger mentioned above. Use it as the pattern (enable RLS, add policies) for any table you add.

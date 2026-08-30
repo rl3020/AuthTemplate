@@ -42,13 +42,6 @@ const sections: Section[] = [
         linkLabel: "Get Docker",
         commands: ["docker info"],
       },
-      {
-        title: "Install the Supabase CLI",
-        description: "Runs the local stack and manages database migrations.",
-        href: "https://supabase.com/docs/guides/local-development/cli/getting-started",
-        linkLabel: "Install the Supabase CLI",
-        commands: ["brew install supabase/tap/supabase"],
-      },
     ],
   },
   {
@@ -69,7 +62,9 @@ const sections: Section[] = [
     steps: [
       {
         title: "Install dependencies and start local Supabase",
-        commands: ["npm install", "supabase start"],
+        description:
+          "npm install also installs the Supabase CLI — it's a project dependency, not something you install globally — so every supabase command here runs through npx.",
+        commands: ["npm install", "npx supabase start"],
       },
       {
         title: "Set up your env file and run the app",
@@ -120,7 +115,7 @@ const sections: Section[] = [
     steps: [
       {
         title: "Create and verify a migration locally",
-        commands: ["supabase migration new init", "supabase db reset"],
+        commands: ["npx supabase migration new init", "npx supabase db reset"],
       },
       {
         title: "Push it — this triggers the migration workflow",
@@ -151,6 +146,15 @@ const sections: Section[] = [
         title: "Add your deployed URL to Supabase",
         description:
           "Authentication → URL Configuration → Redirect URLs — otherwise the confirmation email link gets rejected.",
+      },
+      {
+        title: "Configure a real SMTP provider before you launch",
+        description:
+          "Supabase's built-in mailer works out of the box for confirmation emails, but it's rate-limited project-wide — a couple of emails per hour, not per user — which is fine for testing and too low for real signups.",
+        note:
+          "Fix: Authentication → Emails → SMTP Settings, point it at your own provider (Resend, SendGrid, Postmark all have free tiers), then raise the rate limit under Authentication → Rate Limits. You're still using Supabase Auth — you're just supplying the outbound email server instead of borrowing their shared one.",
+        href: "https://supabase.com/docs/guides/auth/auth-smtp",
+        linkLabel: "Supabase SMTP docs",
       },
     ],
   },
