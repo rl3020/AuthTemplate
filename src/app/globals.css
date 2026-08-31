@@ -7,11 +7,14 @@
 }
 
 :root {
+  color-scheme: light;
+
   --fg: #171717;
   --fg-muted: #666666;
   --bg: #ffffff;
   --border: #d4d4d4;
   --surface-muted: #f0f0f0;
+  --surface-active: #ffffff;
 
   --danger-bg: #fef2f2;
   --danger-fg: #991b1b;
@@ -33,7 +36,67 @@
   --max-width: 1320px;
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --fg: #f2f2f2;
+  --fg-muted: #a3a3a3;
+  --bg: #0a0a0a;
+  --border: #2e2e2e;
+  --surface-muted: #171717;
+  --surface-active: #2a2a2a;
+
+  --danger-bg: #3f1414;
+  --danger-fg: #fca5a5;
+
+  --folder: #7dabf8;
+  --warn: #fbbf24;
+  --success-bg: #052e16;
+  --success-fg: #4ade80;
+
+  --panel-bg: #10141f;
+  --panel-header-bg: #1c2436;
+  --panel-border: #384863;
+  --panel-fg: #e2e8f0;
+  --panel-fg-muted: #9aa5bd;
+  --panel-command: #f9a8d4;
+}
+
+/* Falls back to the system preference until the visitor picks explicitly —
+   [data-theme] (set by ThemeToggle, persisted to localStorage) always wins. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+
+    --fg: #f2f2f2;
+    --fg-muted: #a3a3a3;
+    --bg: #0a0a0a;
+    --border: #2e2e2e;
+    --surface-muted: #171717;
+    --surface-active: #2a2a2a;
+
+    --danger-bg: #3f1414;
+    --danger-fg: #fca5a5;
+
+    --folder: #7dabf8;
+    --warn: #fbbf24;
+    --success-bg: #052e16;
+    --success-fg: #4ade80;
+
+    --panel-bg: #10141f;
+    --panel-header-bg: #1c2436;
+    --panel-border: #384863;
+    --panel-fg: #e2e8f0;
+    --panel-fg-muted: #9aa5bd;
+    --panel-command: #f9a8d4;
+  }
+}
+
 html {
+  /* Belt-and-suspenders alongside body's overflow-x: hidden below — some
+     mobile browsers' elastic overscroll can still bleed through if only
+     one of the two has it set. */
+  overflow-x: hidden;
   font-size: 16px;
   scroll-behavior: smooth;
 }
@@ -54,6 +117,7 @@ body {
   background-color: var(--bg);
   color: var(--fg);
   line-height: 1.6;
+  transition: background-color 0.15s ease, color 0.15s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -1,5 +1,8 @@
 // Part of the (deleteWhenReady) route group — delete the whole folder.
 
+"use client";
+
+import { useState } from "react";
 import styles from "@/app/(deleteWhenReady)/page.module.css";
 
 type Node = {
@@ -8,6 +11,7 @@ type Node = {
   type: "folder" | "file";
   note?: string;
   deletable?: boolean;
+  defaultOpen?: boolean;
 };
 
 const nodes: Node[] = [
@@ -17,31 +21,154 @@ const nodes: Node[] = [
     depth: 2,
     name: "(deleteWhenReady)/",
     type: "folder",
-    note: "Route group — delete the whole folder, it's excluded from the URL",
+    note:
+      "Onboarding content only — the landing page you're looking at right now, this file-tree section, the setup guide below, and the /dashboard example. It's a route group: the parentheses keep it out of the URL, so deleting the whole folder won't break any other route. Delete it once you've replaced the home page with your own.",
+    deletable: true,
+    defaultOpen: true,
+  },
+  {
+    depth: 3,
+    name: "page.tsx",
+    type: "file",
+    note:
+      "The home page, served at \"/\". Renders WhatsIncluded (this section), SetupGuide, and the sign in/up card. Replace this file with your app's real home page once you're wired up.",
     deletable: true,
   },
-  { depth: 3, name: "page.tsx", type: "file", note: "Landing page → \"/\"", deletable: true },
-  { depth: 3, name: "WhatsIncluded.tsx", type: "file", note: "This section", deletable: true },
-  { depth: 3, name: "SetupGuide.tsx", type: "file", note: "Setup guide", deletable: true },
-  { depth: 3, name: "CodePanel.tsx", type: "file", note: "Terminal panel used by the guide", deletable: true },
-  { depth: 3, name: "dashboard/page.tsx", type: "file", note: "Protected-page example → \"/dashboard\"", deletable: true },
-  { depth: 2, name: "AuthToggle.tsx", type: "file", note: "Sign in / sign up toggle" },
-  { depth: 2, name: "login/", type: "folder", note: "Sign-in page + form" },
-  { depth: 2, name: "sign-up/", type: "folder", note: "Sign-up page + form" },
-  { depth: 2, name: "auth/", type: "folder" },
-  { depth: 3, name: "confirm/route.ts", type: "file", note: "Email confirmation handler" },
-  { depth: 3, name: "error/page.tsx", type: "file", note: "Auth error page" },
-  { depth: 2, name: "layout.tsx", type: "file", note: "Root layout" },
-  { depth: 2, name: "globals.css", type: "file", note: "Global styles" },
+  {
+    depth: 3,
+    name: "WhatsIncluded.tsx",
+    type: "file",
+    note: "Renders this section — the file tree with clickable notes you're reading right now.",
+    deletable: true,
+  },
+  {
+    depth: 3,
+    name: "SetupGuide.tsx",
+    type: "file",
+    note: "Renders the numbered step-by-step guide below (Prerequisites, local setup, deployment, and so on).",
+    deletable: true,
+  },
+  {
+    depth: 3,
+    name: "CodePanel.tsx",
+    type: "file",
+    note: "The dark terminal-style panel with a copy button, used throughout the setup guide for commands and env var names.",
+    deletable: true,
+  },
+  {
+    depth: 3,
+    name: "dashboard/page.tsx",
+    type: "file",
+    note:
+      "A working example of a protected page → \"/dashboard\". Calls requireUser() to redirect signed-out visitors, then shows the signed-in user's email with a sign-out button. Copy this pattern for your own protected pages.",
+    deletable: true,
+  },
+  {
+    depth: 2,
+    name: "AuthToggle.tsx",
+    type: "file",
+    note:
+      "The sign in / sign up card on this home page. Swaps between LoginForm and SignUpForm client-side, without navigating to a different page.",
+  },
+  {
+    depth: 2,
+    name: "login/",
+    type: "folder",
+    note:
+      "The dedicated \"/login\" page. LoginForm.tsx inside it calls signIn() through React's useActionState, which gives you pending state and the last error for free.",
+  },
+  {
+    depth: 2,
+    name: "sign-up/",
+    type: "folder",
+    note:
+      "The dedicated \"/sign-up\" page. SignUpForm.tsx calls signUp() the same way LoginForm calls signIn(), and check-email/ is shown after sign-up when email confirmation is required.",
+  },
+  {
+    depth: 2,
+    name: "auth/",
+    type: "folder",
+    note:
+      "Pages and a Route Handler for the email confirmation and error flow — not to be confused with lib/auth/ further down, which holds the actual signUp/signIn/signOut logic this folder calls into.",
+    defaultOpen: true,
+  },
+  {
+    depth: 3,
+    name: "confirm/route.ts",
+    type: "file",
+    note:
+      "A Route Handler that verifies the token from the confirmation email link, then redirects to /dashboard on success or /auth/error if it's invalid or expired.",
+  },
+  {
+    depth: 3,
+    name: "error/page.tsx",
+    type: "file",
+    note: "A generic page shown when an auth link is invalid, expired, or otherwise fails to verify.",
+  },
+  {
+    depth: 2,
+    name: "layout.tsx",
+    type: "file",
+    note:
+      "The root layout — wraps every page, loads fonts, and mounts the dark mode toggle plus the pre-hydration script that sets the theme before first paint (so there's no flash of the wrong theme).",
+  },
+  {
+    depth: 2,
+    name: "globals.css",
+    type: "file",
+    note: "Shared resets, color tokens (including the dark mode overrides), and base element styles used across every page.",
+  },
   { depth: 1, name: "lib/", type: "folder" },
-  { depth: 2, name: "auth/", type: "folder" },
-  { depth: 3, name: "actions.ts", type: "file", note: "signUp, signIn, signOut" },
-  { depth: 3, name: "session.ts", type: "file", note: "getUser, requireUser" },
-  { depth: 3, name: "useUser.ts", type: "file", note: "Reactive client hook" },
-  { depth: 2, name: "supabase/", type: "folder", note: "Browser / server / proxy clients" },
-  { depth: 2, name: "site.ts", type: "file", note: "Site URL helper" },
-  { depth: 1, name: "proxy.ts", type: "file", note: "Session refresh + route gating" },
+  {
+    depth: 2,
+    name: "auth/",
+    type: "folder",
+    note:
+      "The actual authentication logic: Server Actions, session helpers, and a reactive client hook. This is the one app/auth/ above calls into — that folder only has pages and a route handler.",
+    defaultOpen: true,
+  },
+  {
+    depth: 3,
+    name: "actions.ts",
+    type: "file",
+    note: "signUp, signIn, and signOut — the three Server Actions that call Supabase directly. Every auth form in the template calls into these.",
+  },
+  {
+    depth: 3,
+    name: "session.ts",
+    type: "file",
+    note: "getUser() and requireUser(), for reading the session in Server Components. requireUser() redirects to /login automatically when there's no session.",
+  },
+  {
+    depth: 3,
+    name: "useUser.ts",
+    type: "file",
+    note:
+      "A reactive client-side hook for \"use client\" components that need live auth state, like a header badge. Not a security check — that's always requireUser() plus Row Level Security.",
+  },
+  {
+    depth: 2,
+    name: "supabase/",
+    type: "folder",
+    note:
+      "Three Supabase client helpers, one per runtime: browser, server, and middleware. Using the wrong one is the most common source of auth bugs, so pick deliberately.",
+  },
+  {
+    depth: 2,
+    name: "site.ts",
+    type: "file",
+    note: "Reads NEXT_PUBLIC_SITE_URL, used to build the email confirmation link sent by Supabase.",
+  },
+  {
+    depth: 1,
+    name: "proxy.ts",
+    type: "file",
+    note:
+      "Next's middleware — refreshes the session cookie on every request and redirects signed-out visitors away from protected routes. A UX nicety only, not the real security boundary (requireUser() plus RLS is).",
+  },
 ];
+
+const COLLAPSED_MAX_HEIGHT = 420;
 
 function FolderIcon() {
   return (
@@ -76,35 +203,109 @@ function FileIcon() {
   );
 }
 
+function initialOpenKeys(): Set<string> {
+  const keys = new Set<string>();
+  nodes.forEach((node, index) => {
+    if (node.defaultOpen) keys.add(`${index}-${node.name}`);
+  });
+  return keys;
+}
+
 export function WhatsIncluded() {
+  const [openKeys, setOpenKeys] = useState<Set<string>>(initialOpenKeys);
+  const [expanded, setExpanded] = useState(false);
+
+  function toggleNote(key: string) {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  function closeNote(key: string) {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+  }
+
   return (
     <section className={styles.included}>
       <h2 className={styles.sectionHeading}>What&apos;s included</h2>
       <p className={styles.includedCaption}>
         Everything not marked &quot;delete when ready&quot; is the actual
-        template — keep it.
+        template — keep it. Click a file or folder with a 💡 for details.
       </p>
-      <div className={styles.tree}>
-        {nodes.map((node) => (
-          <div key={`${node.depth}-${node.name}`} className={styles.treeRow}>
-            <span
-              className={styles.treePath}
-              style={{ paddingLeft: `${node.depth * 1.125}rem` }}
-            >
-              {node.type === "folder" ? <FolderIcon /> : <FileIcon />}
-              {node.name}
-            </span>
-            {node.note && (
-              <span className={styles.treeNote}>
-                # {node.note}
-                {node.deletable && (
-                  <span className={styles.treeDelete}> · delete when ready</span>
+      <div className={styles.treeWrap}>
+        <div
+          className={styles.tree}
+          style={!expanded ? { maxHeight: COLLAPSED_MAX_HEIGHT, overflowY: "hidden" } : undefined}
+        >
+          {nodes.map((node, index) => {
+            const key = `${index}-${node.name}`;
+            const isOpen = openKeys.has(key);
+            const icon = node.type === "folder" ? <FolderIcon /> : <FileIcon />;
+
+            return (
+              <div key={key} className={styles.treeRow}>
+                {node.note ? (
+                  <button
+                    type="button"
+                    className={styles.treePathButton}
+                    style={{ paddingLeft: `${node.depth * 1.125}rem` }}
+                    onClick={() => toggleNote(key)}
+                    aria-expanded={isOpen}
+                  >
+                    {icon}
+                    {node.name}
+                    <span className={styles.hintBulb} aria-hidden="true">💡</span>
+                  </button>
+                ) : (
+                  <span
+                    className={styles.treePath}
+                    style={{ paddingLeft: `${node.depth * 1.125}rem` }}
+                  >
+                    {icon}
+                    {node.name}
+                  </span>
                 )}
-              </span>
-            )}
-          </div>
-        ))}
+                {isOpen && node.note && (
+                  <div className={styles.bubble} role="note">
+                    <button
+                      type="button"
+                      className={styles.bubbleClose}
+                      onClick={() => closeNote(key)}
+                      aria-label="Close note"
+                    >
+                      ×
+                    </button>
+                    <p className={styles.bubbleText}>
+                      {node.note}
+                      {node.deletable && (
+                        <span className={styles.treeDelete}> · delete when ready</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {!expanded && <div className={styles.treeFade} />}
       </div>
+      <button
+        type="button"
+        className={styles.expandButton}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {expanded ? "Show less" : "Show all files"}
+      </button>
     </section>
   );
 }
