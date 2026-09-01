@@ -30,15 +30,22 @@ export default function Page() {
               target="_blank"
               rel="noreferrer"
             >
+              <span className={styles.stepBadge} aria-hidden="true">1</span>
               Use this template
             </a>
+            <span className={styles.heroArrow} aria-hidden="true">→</span>
             {/* A plain <a>, not next/link — Link's client-side routing
                 fights the browser's native hash scroll once the page is
                 already scrolled, which is exactly the bug this replaced. */}
             <a className={styles.secondaryButton} href="#setup-prompt">
+              <span className={styles.stepBadge} aria-hidden="true">2</span>
               Create with prompt
             </a>
           </div>
+          <p className={styles.heroActionsCaption}>
+            Two steps, in order: make your own copy on GitHub, then hand the
+            prompt to your AI coding assistant to finish the setup.
+          </p>
         </div>
         <div className={styles.grid}>
           <div className={styles.guideCol}>
