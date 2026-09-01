@@ -222,6 +222,14 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Points the confirmation link at our own /auth/confirm route (which
+# requires a click before verifying) instead of Supabase's default
+# {{ .ConfirmationURL }}, which verifies on GET — vulnerable to mail
+# scanners prefetching the link and consuming it before the user opens it.
+[auth.email.template.confirmation]
+subject = "Confirm your email"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

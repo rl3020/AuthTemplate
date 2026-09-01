@@ -102,10 +102,10 @@ const nodes: Node[] = [
   },
   {
     depth: 3,
-    name: "confirm/route.ts",
+    name: "confirm/page.tsx",
     type: "file",
     note:
-      "A Route Handler that verifies the token from the confirmation email link, then redirects to /dashboard on success or /auth/error if it's invalid or expired.",
+      "The landing page for the confirmation email link — requires an actual click before verifying the token, rather than confirming on page load. That matters because mail scanners prefetch every link in an email; a GET-triggered confirmation would get silently consumed by a bot before the user ever opens the message.",
   },
   {
     depth: 3,

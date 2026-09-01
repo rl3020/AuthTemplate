@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { type EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site";
 import type { AuthActionState } from "@/lib/auth/types";
@@ -81,4 +82,30 @@ export async function signOut() {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/auth/login");
+}
+
+// Consumes the token from an email confirmation link. Deliberately requires
+// a real form submit rather than firing on GET: mail scanners (Microsoft
+// Defender, Proofpoint, etc.) prefetch every link in an email, which would
+// silently consume a token-in-URL confirmation before the user ever opens
+// the message. Gating the actual verifyOtp call behind a click means only a
+// human triggers it.
+export async function confirmEmail(formData: FormData) {
+  const token_hash = String(formData.get("token_hash") ?? "");
+  const type = formData.get("type") as EmailOtpType | null;
+  const next = String(formData.get("next") || "/dashboard");
+
+  if (!token_hash || !type) {
+    redirect("/auth/error?error=Missing confirmation token.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+
+  if (error) {
+    redirect(`/auth/error?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/", "layout");
+  redirect(next);
 }
