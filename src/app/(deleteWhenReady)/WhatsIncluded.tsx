@@ -65,7 +65,6 @@ const nodes: Node[] = [
     name: "components/",
     type: "folder",
     note: "App-wide reusable UI, not tied to a specific route. ThemeToggle.tsx is the dark mode switch mounted in the root layout; AuthToggle.tsx is the sign in / sign up card on this home page, swapping between LoginForm and SignUpForm client-side without navigating to a different page.",
-    defaultOpen: true,
   },
   {
     depth: 2,
@@ -134,7 +133,6 @@ const nodes: Node[] = [
     name: "auth/",
     type: "folder",
     note: "The actual authentication logic: Server Actions, session helpers, and a reactive client hook. This is the one app/auth/ above calls into — that folder only has pages and a route handler.",
-    defaultOpen: true,
   },
   {
     depth: 3,
