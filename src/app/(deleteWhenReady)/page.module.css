@@ -50,6 +50,47 @@
   margin: 0;
 }
 
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-green);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.primaryButton:hover {
+  background: var(--accent-green-hover);
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.secondaryButton:hover {
+  background: var(--border);
+}
+
 .included {
   margin-bottom: 1rem;
 }
@@ -273,6 +314,42 @@
 .guideSection {
   max-width: var(--max-width);
   margin: 4rem auto 0;
+}
+
+.promptSection {
+  max-width: var(--max-width);
+  margin: 4rem auto 0;
+  scroll-margin-top: 2rem;
+}
+
+.promptCaption {
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  margin: 0.25rem 0 0;
+  max-width: 70ch;
+}
+
+/* white-space: pre-wrap (not pre) keeps the numbered-list line breaks
+   without disabling wrapping — plain pre would reintroduce the horizontal
+   overflow bug fixed elsewhere on this page for long lines. */
+.promptBox {
+  margin-top: 1.25rem;
+  padding: 1.5rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-geist-sans);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--fg);
+  white-space: pre-wrap;
+}
+
+.promptActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 /* Shared by each group label ("Local setup" etc.) — one class so they stay

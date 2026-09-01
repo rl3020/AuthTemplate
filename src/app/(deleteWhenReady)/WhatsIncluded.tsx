@@ -52,6 +52,13 @@ const nodes: Node[] = [
   },
   {
     depth: 3,
+    name: "SetupPrompt.tsx",
+    type: "file",
+    note: "Renders the copyable \"set up with your AI coding assistant\" prompt, right above the setup guide.",
+    deletable: true,
+  },
+  {
+    depth: 3,
     name: "SetupGuide.tsx",
     type: "file",
     note: "Renders the numbered step-by-step guide below (Prerequisites, local setup, deployment, and so on).",
