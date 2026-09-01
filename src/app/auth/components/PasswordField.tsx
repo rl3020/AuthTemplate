@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "@/app/auth/auth.module.css";
+import passwordStyles from "@/app/auth/components/PasswordField.module.css";
 
 function EyeIcon() {
   return (
@@ -48,9 +49,9 @@ export function PasswordField({
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className={styles.field}>
+    <div className={styles.authField}>
       <label htmlFor={id}>{label}</label>
-      <div className={styles.passwordWrap}>
+      <div className={passwordStyles.passwordWrap}>
         <input
           id={id}
           name={name}
@@ -61,7 +62,7 @@ export function PasswordField({
         />
         <button
           type="button"
-          className={styles.passwordToggle}
+          className={passwordStyles.passwordToggle}
           onClick={() => setVisible((value) => !value)}
           aria-label={visible ? "Hide password" : "Show password"}
           aria-pressed={visible}

@@ -1,0 +1,29 @@
+/* A pill-shaped track sitting inside the card (not bled to its edges) —
+   the active segment floats as a raised pill with a soft shadow inside it.
+   Uses --surface-active (not --bg) so the pill stays visibly lighter than
+   the track in dark mode too, where --bg is nearly black. */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-full);
+}
+
+.tab {
+  flex: 1;
+  padding: 0.625rem 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.tabActive {
+  background: var(--surface-active);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}

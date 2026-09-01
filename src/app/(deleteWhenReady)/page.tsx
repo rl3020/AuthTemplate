@@ -4,7 +4,7 @@
 // parenthesized name keeps it out of the URL, so /dashboard (inside it)
 // still routes normally. Replace this page with your actual home page.
 
-import { AuthToggle } from "@/app/AuthToggle";
+import { AuthToggle } from "@/app/components/AuthToggle";
 import { SetupGuide } from "@/app/(deleteWhenReady)/SetupGuide";
 import { WhatsIncluded } from "@/app/(deleteWhenReady)/WhatsIncluded";
 import styles from "@/app/(deleteWhenReady)/page.module.css";

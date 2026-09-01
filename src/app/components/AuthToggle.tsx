@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { LoginForm } from "@/app/login/LoginForm";
-import { SignUpForm } from "@/app/sign-up/SignUpForm";
-import styles from "@/app/auth/auth.module.css";
+import { LoginForm } from "@/app/auth/login/LoginForm";
+import { SignUpForm } from "@/app/auth/sign-up/SignUpForm";
+import appStyles from "@/app/components/app.module.css";
+import toggleStyles from "@/app/components/AuthToggle.module.css";
 
 type Mode = "login" | "signup";
 
@@ -11,18 +12,18 @@ export function AuthToggle() {
   const [mode, setMode] = useState<Mode>("login");
 
   return (
-    <div className={styles.card}>
-      <div className={styles.tabs}>
+    <div className={appStyles.card}>
+      <div className={toggleStyles.tabs}>
         <button
           type="button"
-          className={`${styles.tab} ${mode === "login" ? styles.tabActive : ""}`}
+          className={`${toggleStyles.tab} ${mode === "login" ? toggleStyles.tabActive : ""}`}
           onClick={() => setMode("login")}
         >
           Sign in
         </button>
         <button
           type="button"
-          className={`${styles.tab} ${mode === "signup" ? styles.tabActive : ""}`}
+          className={`${toggleStyles.tab} ${mode === "signup" ? toggleStyles.tabActive : ""}`}
           onClick={() => setMode("signup")}
         >
           Sign up

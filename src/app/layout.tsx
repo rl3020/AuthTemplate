@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
-import { ThemeToggle } from "@/app/ThemeToggle";
+import { InlineScript } from "@/app/components/InlineScript";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
+import styles from "@/app/layout.module.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,6 +21,23 @@ export const metadata: Metadata = {
     "A Next.js starting point with Supabase auth already wired up.",
 };
 
+// Runs before hydration so the stored theme applies before first paint —
+// otherwise the page would flash light mode for dark-mode users. Can't read
+// cookies/headers instead: this needs localStorage, which only exists in
+// the browser.
+const themeInitScript = `
+  (function () {
+    try {
+      var theme = localStorage.getItem("theme");
+      if (theme === "dark" || theme === "light") {
+        document.documentElement.setAttribute("data-theme", theme);
+      }
+    } catch {
+      // Private browsing or storage disabled — falls back to prefers-color-scheme.
+    }
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,12 +46,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`}
-        </Script>
+        <InlineScript html={themeInitScript} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ThemeToggle />
+        <header className={styles.navbar}>
+          <ThemeToggle />
+        </header>
         {children}
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import styles from "@/app/ThemeToggle.module.css";
+import styles from "@/app/components/ThemeToggle.module.css";
 
 type Theme = "light" | "dark";
 

@@ -65,32 +65,40 @@ const nodes: Node[] = [
   },
   {
     depth: 2,
-    name: "AuthToggle.tsx",
-    type: "file",
-    note:
-      "The sign in / sign up card on this home page. Swaps between LoginForm and SignUpForm client-side, without navigating to a different page.",
-  },
-  {
-    depth: 2,
-    name: "login/",
+    name: "components/",
     type: "folder",
     note:
-      "The dedicated \"/login\" page. LoginForm.tsx inside it calls signIn() through React's useActionState, which gives you pending state and the last error for free.",
-  },
-  {
-    depth: 2,
-    name: "sign-up/",
-    type: "folder",
-    note:
-      "The dedicated \"/sign-up\" page. SignUpForm.tsx calls signUp() the same way LoginForm calls signIn(), and check-email/ is shown after sign-up when email confirmation is required.",
+      "App-wide reusable UI, not tied to a specific route. ThemeToggle.tsx is the dark mode switch mounted in the root layout; AuthToggle.tsx is the sign in / sign up card on this home page, swapping between LoginForm and SignUpForm client-side without navigating to a different page.",
+    defaultOpen: true,
   },
   {
     depth: 2,
     name: "auth/",
     type: "folder",
     note:
-      "Pages and a Route Handler for the email confirmation and error flow — not to be confused with lib/auth/ further down, which holds the actual signUp/signIn/signOut logic this folder calls into.",
+      "Every auth route and its shared UI, all in one place — not to be confused with lib/auth/ further down, which holds the actual signUp/signIn/signOut logic this folder calls into.",
     defaultOpen: true,
+  },
+  {
+    depth: 3,
+    name: "login/",
+    type: "folder",
+    note:
+      "The \"/auth/login\" page. LoginForm.tsx inside it calls signIn() through React's useActionState, which gives you pending state and the last error for free.",
+  },
+  {
+    depth: 3,
+    name: "sign-up/",
+    type: "folder",
+    note:
+      "The \"/auth/sign-up\" page. SignUpForm.tsx calls signUp() the same way LoginForm calls signIn(), and check-email/ is shown after sign-up when email confirmation is required.",
+  },
+  {
+    depth: 3,
+    name: "components/",
+    type: "folder",
+    note:
+      "Pieces shared between LoginForm and SignUpForm: EmailField, PasswordField (with a show/hide toggle), SubmitButton, and the AuthCard shell every auth page renders inside.",
   },
   {
     depth: 3,
@@ -137,7 +145,7 @@ const nodes: Node[] = [
     depth: 3,
     name: "session.ts",
     type: "file",
-    note: "getUser() and requireUser(), for reading the session in Server Components. requireUser() redirects to /login automatically when there's no session.",
+    note: "getUser() and requireUser(), for reading the session in Server Components. requireUser() redirects to /auth/login automatically when there's no session.",
   },
   {
     depth: 3,
@@ -157,7 +165,8 @@ const nodes: Node[] = [
     depth: 2,
     name: "site.ts",
     type: "file",
-    note: "Reads NEXT_PUBLIC_SITE_URL, used to build the email confirmation link sent by Supabase.",
+    note:
+      "Builds the email confirmation link sent by Supabase. Auto-detects the deployment URL on Vercel; NEXT_PUBLIC_SITE_URL is an optional override for a custom domain or another host.",
   },
   {
     depth: 1,

@@ -1,10 +1,7 @@
 /* A slider-style switch: sun and moon sit at fixed ends of the track, and
    a round thumb slides to whichever one matches the active theme. */
 .toggle {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 50;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;

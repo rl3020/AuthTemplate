@@ -48,7 +48,7 @@ export async function signUp(
     redirect("/dashboard");
   }
 
-  redirect("/sign-up/check-email");
+  redirect("/auth/sign-up/check-email");
 }
 
 export async function signIn(
@@ -80,5 +80,5 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/login");
+  redirect("/auth/login");
 }

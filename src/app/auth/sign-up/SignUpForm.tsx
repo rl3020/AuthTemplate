@@ -4,7 +4,9 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signUp } from "@/lib/auth/actions";
 import { initialAuthActionState } from "@/lib/auth/types";
-import { PasswordField } from "@/app/auth/PasswordField";
+import { EmailField } from "@/app/auth/components/EmailField";
+import { PasswordField } from "@/app/auth/components/PasswordField";
+import { SubmitButton } from "@/app/auth/components/SubmitButton";
 import styles from "@/app/auth/auth.module.css";
 
 export function SignUpForm() {
@@ -14,19 +16,10 @@ export function SignUpForm() {
   );
 
   return (
-    <form className={styles.form} action={formAction}>
-      {state.error && <p className={styles.error}>{state.error}</p>}
+    <form className={styles.authForm} action={formAction}>
+      {state.error && <p className={styles.authError}>{state.error}</p>}
 
-      <div className={styles.field}>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-        />
-      </div>
+      <EmailField />
 
       <PasswordField
         id="password"
@@ -44,13 +37,11 @@ export function SignUpForm() {
         minLength={8}
       />
 
-      <button className={styles.submit} type="submit" disabled={pending}>
-        {pending ? "Creating account…" : "Sign up"}
-      </button>
+      <SubmitButton pending={pending} label="Sign up" pendingLabel="Creating account…" />
 
-      <p className={styles.footer}>
+      <p className={styles.authFooter}>
         Already have an account?{" "}
-        <Link className={styles.link} href="/login">
+        <Link className={styles.authLink} href="/auth/login">
           Sign in
         </Link>
       </p>

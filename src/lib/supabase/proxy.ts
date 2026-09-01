@@ -1,15 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Paths that require a signed-in user. This is a UX redirect only — it
-// makes the app *feel* protected. It is not the security boundary: a
-// Server Action reachable from an excluded path bypasses it entirely, so
-// every Server Action and Server Component that touches private data
-// must check auth itself, and every table must have RLS enabled.
-const PROTECTED_PREFIXES = ["/dashboard"];
+// Every path is private by default — this is a UX redirect only, it makes
+// the app *feel* protected. It is not the security boundary: a Server
+// Action reachable from an excluded path bypasses it entirely, so every
+// Server Action and Server Component that touches private data must check
+// auth itself, and every table must have RLS enabled. Add a new private
+// page and there's nothing to update here; every auth route already lives
+// under /auth/, so a new one there is automatically public too.
+function isPublicPath(pathname: string) {
+  return pathname === "/" || pathname.startsWith("/auth/");
+}
 
 // Signed-in users shouldn't see the login/sign-up forms again.
-const AUTH_PREFIXES = ["/login", "/sign-up"];
+const AUTH_ENTRY_PREFIXES = ["/auth/login", "/auth/sign-up"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -45,21 +49,18 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isProtectedPath = PROTECTED_PREFIXES.some((prefix) =>
-    pathname.startsWith(prefix),
-  );
-  const isAuthPath = AUTH_PREFIXES.some((prefix) =>
+  const isAuthEntry = AUTH_ENTRY_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix),
   );
 
-  if (!user && isProtectedPath) {
+  if (!user && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/auth/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthPath) {
+  if (user && isAuthEntry) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
