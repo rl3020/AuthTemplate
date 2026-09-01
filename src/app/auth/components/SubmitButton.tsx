@@ -1,4 +1,4 @@
-import styles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 
 export function SubmitButton({
   pending,
@@ -10,7 +10,7 @@ export function SubmitButton({
   pendingLabel: string;
 }) {
   return (
-    <button className={styles.authSubmit} type="submit" disabled={pending}>
+    <button className={styles.submit} type="submit" disabled={pending}>
       {pending ? pendingLabel : label}
     </button>
   );

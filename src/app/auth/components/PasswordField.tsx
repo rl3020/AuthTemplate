@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import styles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 import passwordStyles from "@/app/auth/components/PasswordField.module.css";
 
 function EyeIcon() {
@@ -49,7 +49,7 @@ export function PasswordField({
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className={styles.authField}>
+    <div className={styles.field}>
       <label htmlFor={id}>{label}</label>
       <div className={passwordStyles.passwordWrap}>
         <input

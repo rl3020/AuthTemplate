@@ -6,7 +6,8 @@ import { requestPasswordReset } from "@/lib/auth/actions";
 import { initialAuthActionState } from "@/lib/auth/types";
 import { EmailField } from "@/app/auth/components/EmailField";
 import { SubmitButton } from "@/app/auth/components/SubmitButton";
-import styles from "@/app/auth/auth.module.css";
+import authStyles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 
 export function ForgotPasswordForm() {
   const [state, formAction, pending] = useActionState(
@@ -15,8 +16,8 @@ export function ForgotPasswordForm() {
   );
 
   return (
-    <form className={styles.authForm} action={formAction}>
-      {state.error && <p className={styles.authError}>{state.error}</p>}
+    <form className={styles.form} action={formAction}>
+      {state.error && <p className={styles.error}>{state.error}</p>}
 
       <EmailField />
 
@@ -26,9 +27,9 @@ export function ForgotPasswordForm() {
         pendingLabel="Sending…"
       />
 
-      <p className={styles.authFooter}>
+      <p className={authStyles.authFooter}>
         Remembered your password?{" "}
-        <Link className={styles.authLink} href="/auth/login">
+        <Link className={authStyles.authLink} href="/auth/login">
           Sign in
         </Link>
       </p>

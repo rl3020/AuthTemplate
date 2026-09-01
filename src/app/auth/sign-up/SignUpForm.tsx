@@ -7,7 +7,8 @@ import { initialAuthActionState } from "@/lib/auth/types";
 import { EmailField } from "@/app/auth/components/EmailField";
 import { PasswordField } from "@/app/auth/components/PasswordField";
 import { SubmitButton } from "@/app/auth/components/SubmitButton";
-import styles from "@/app/auth/auth.module.css";
+import authStyles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 
 export function SignUpForm() {
   const [state, formAction, pending] = useActionState(
@@ -16,8 +17,8 @@ export function SignUpForm() {
   );
 
   return (
-    <form className={styles.authForm} action={formAction}>
-      {state.error && <p className={styles.authError}>{state.error}</p>}
+    <form className={styles.form} action={formAction}>
+      {state.error && <p className={styles.error}>{state.error}</p>}
 
       <EmailField />
 
@@ -39,9 +40,9 @@ export function SignUpForm() {
 
       <SubmitButton pending={pending} label="Sign up" pendingLabel="Creating account…" />
 
-      <p className={styles.authFooter}>
+      <p className={authStyles.authFooter}>
         Already have an account?{" "}
-        <Link className={styles.authLink} href="/auth/login">
+        <Link className={authStyles.authLink} href="/auth/login">
           Sign in
         </Link>
       </p>

@@ -1,8 +1,8 @@
-import styles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 
 export function EmailField() {
   return (
-    <div className={styles.authField}>
+    <div className={styles.field}>
       <label htmlFor="email">Email</label>
       <input
         id="email"

@@ -60,6 +60,25 @@
   margin: 0.25rem 0 0;
 }
 
+.featureList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.featureItem {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+
 .treeWrap {
   position: relative;
   margin-top: 1.25rem;

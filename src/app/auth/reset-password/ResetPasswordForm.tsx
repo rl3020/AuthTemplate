@@ -5,7 +5,7 @@ import { updatePassword } from "@/lib/auth/actions";
 import { initialAuthActionState } from "@/lib/auth/types";
 import { PasswordField } from "@/app/auth/components/PasswordField";
 import { SubmitButton } from "@/app/auth/components/SubmitButton";
-import styles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 
 export function ResetPasswordForm() {
   const [state, formAction, pending] = useActionState(
@@ -14,8 +14,8 @@ export function ResetPasswordForm() {
   );
 
   return (
-    <form className={styles.authForm} action={formAction}>
-      {state.error && <p className={styles.authError}>{state.error}</p>}
+    <form className={styles.form} action={formAction}>
+      {state.error && <p className={styles.error}>{state.error}</p>}
 
       <PasswordField
         id="password"

@@ -14,6 +14,17 @@ type Node = {
   defaultOpen?: boolean;
 };
 
+const FEATURES = [
+  "Email/password login",
+  "Email confirmation",
+  "Forgot/reset password",
+  "Protected routes by default",
+  "Row Level Security",
+  "Account settings page",
+  "Dark mode",
+  "CI-deployed migrations",
+];
+
 const nodes: Node[] = [
   { depth: 0, name: "src/", type: "folder" },
   { depth: 1, name: "app/", type: "folder" },
@@ -57,14 +68,14 @@ const nodes: Node[] = [
     depth: 3,
     name: "dashboard/page.tsx",
     type: "file",
-    note: 'A working example of a protected page → "/dashboard". Calls requireUser() to redirect signed-out visitors, then shows the signed-in user\'s email with a sign-out button. Copy this pattern for your own protected pages.',
+    note: 'A working example of a protected page → "/dashboard". Calls requireUser() to redirect signed-out visitors, reads the profile for a display name, and links to Settings and sign-out. Copy this pattern for your own protected pages.',
     deletable: true,
   },
   {
     depth: 2,
     name: "components/",
     type: "folder",
-    note: "App-wide reusable UI, not tied to a specific route. ThemeToggle.tsx is the dark mode switch mounted in the root layout; AuthToggle.tsx is the sign in / sign up card on this home page, swapping between LoginForm and SignUpForm client-side without navigating to a different page.",
+    note: "App-wide reusable UI, not tied to a specific route. ThemeToggle.tsx is the dark mode switch mounted in the root layout; AuthToggle.tsx is the sign in / sign up card on this home page; InlineScript.tsx is the helper used for the pre-hydration theme script. app.module.css holds styles shared across features — form fields, buttons, the login-card shell — promoted here once a second feature (settings) needed the identical look, not duplicated per-feature.",
   },
   {
     depth: 2,
@@ -117,9 +128,22 @@ const nodes: Node[] = [
   },
   {
     depth: 2,
+    name: "settings/",
+    type: "folder",
+    note: 'A real, non-deletable protected page → "/settings" — not inside (deleteWhenReady) since account settings is a feature most apps actually keep. Reads the profile via lib/profile/queries.ts; DisplayNameForm.tsx writes it back through lib/settings/actions.ts.',
+    defaultOpen: true,
+  },
+  {
+    depth: 2,
     name: "layout.tsx",
     type: "file",
-    note: "The root layout — wraps every page, loads fonts, and mounts the dark mode toggle plus the pre-hydration script that sets the theme before first paint (so there's no flash of the wrong theme).",
+    note: "The root layout — wraps every page, loads fonts, and mounts the navbar (dark mode toggle) plus InlineScript, the pre-hydration script that sets the theme before first paint (so there's no flash of the wrong theme).",
+  },
+  {
+    depth: 2,
+    name: "layout.module.css",
+    type: "file",
+    note: "Styles the navbar in the root layout — just enough to hold the theme toggle at the top of the page in normal document flow (it scrolls away with the page, it's not fixed/floating).",
   },
   {
     depth: 2,
@@ -154,6 +178,30 @@ const nodes: Node[] = [
   },
   {
     depth: 2,
+    name: "profile/",
+    type: "folder",
+    note: "queries.ts exports getProfile(userId) — cache()-wrapped like getUser(), so a page and a layout both reading the profile in one request only hits the database once. The read-side counterpart to lib/settings/actions.ts below, which writes it.",
+  },
+  {
+    depth: 2,
+    name: "settings/",
+    type: "folder",
+    note: "Mirrors the lib/auth/ pattern for a second, non-auth feature — logic separated from the page it powers.",
+  },
+  {
+    depth: 3,
+    name: "actions.ts",
+    type: "file",
+    note: "updateDisplayName — the Server Action the settings form calls into. Requires an active session (via requireUser()) and writes to profiles.display_name, scoped by the same RLS policy that already protects that table.",
+  },
+  {
+    depth: 3,
+    name: "types.ts",
+    type: "file",
+    note: "SettingsActionState — same shape as AuthActionState plus an optional success flag, since this form confirms in place instead of redirecting.",
+  },
+  {
+    depth: 2,
     name: "supabase/",
     type: "folder",
     note: "Three Supabase client helpers, one per runtime: browser, server, and middleware. Using the wrong one is the most common source of auth bugs, so pick deliberately.",
@@ -168,7 +216,7 @@ const nodes: Node[] = [
     depth: 1,
     name: "proxy.ts",
     type: "file",
-    note: "Next's middleware — refreshes the session cookie on every request and redirects signed-out visitors away from protected routes. A UX nicety only, not the real security boundary (requireUser() plus RLS is).",
+    note: 'Next\'s middleware — refreshes the session cookie on every request. Default-deny: every route requires a signed-in user except "/" and "/auth/*", so a new protected page needs nothing added here. A UX nicety only, not the real security boundary (requireUser() plus RLS is).',
   },
 ];
 
@@ -257,6 +305,13 @@ export function WhatsIncluded() {
         Everything not marked &quot;delete when ready&quot; is the actual
         template — keep it. Click a file or folder with a 💡 for details.
       </p>
+      <ul className={styles.featureList}>
+        {FEATURES.map((feature) => (
+          <li key={feature} className={styles.featureItem}>
+            {feature}
+          </li>
+        ))}
+      </ul>
       <div className={styles.treeWrap}>
         <div
           className={styles.tree}

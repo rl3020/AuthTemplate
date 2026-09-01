@@ -1,6 +1,7 @@
 import { AuthCard } from "@/app/auth/components/AuthCard";
 import { confirmEmail } from "@/lib/auth/actions";
-import styles from "@/app/auth/auth.module.css";
+import authStyles from "@/app/auth/auth.module.css";
+import styles from "@/app/components/app.module.css";
 
 const COPY = {
   recovery: {
@@ -25,8 +26,8 @@ export default async function ConfirmEmailPage({
   if (!token_hash || !type) {
     return (
       <AuthCard>
-        <h1 className={styles.authTitle}>Invalid confirmation link</h1>
-        <p className={styles.authSubtitle}>
+        <h1 className={authStyles.authTitle}>Invalid confirmation link</h1>
+        <p className={authStyles.authSubtitle}>
           This link is missing required information. Request a new one and
           try again.
         </p>
@@ -38,13 +39,13 @@ export default async function ConfirmEmailPage({
 
   return (
     <AuthCard>
-      <h1 className={styles.authTitle}>{copy.title}</h1>
-      <p className={styles.authSubtitle}>{copy.body}</p>
+      <h1 className={authStyles.authTitle}>{copy.title}</h1>
+      <p className={authStyles.authSubtitle}>{copy.body}</p>
       <form action={confirmEmail}>
         <input type="hidden" name="token_hash" value={token_hash} />
         <input type="hidden" name="type" value={type} />
         <input type="hidden" name="next" value={next ?? "/dashboard"} />
-        <button className={styles.authSubmit} type="submit">
+        <button className={styles.submit} type="submit">
           {copy.button}
         </button>
       </form>
