@@ -31,12 +31,6 @@
   --panel-fg-muted: #8b94a8;
   --panel-command: #f472b6;
 
-  /* A fixed brand green for the primary CTA button — deliberately not
-     re-themed per dark/light (like --panel-command above), so the button
-     reads the same regardless of page theme. */
-  --accent-green: #16a34a;
-  --accent-green-hover: #15803d;
-
   --radius: 0.75rem;
   --radius-full: 9999px;
   --max-width: 1320px;

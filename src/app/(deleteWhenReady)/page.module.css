@@ -58,29 +58,34 @@
   margin-top: 0.25rem;
 }
 
+/* Same green language as the Docker/SMTP callouts elsewhere on this page
+   (--success-bg/--success-fg) — a tinted fill with a matching border,
+   rather than a solid block of color. */
 .primaryButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-full);
-  background: var(--accent-green);
-  color: #ffffff;
+  padding: 0.6875rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--success-fg);
+  background: var(--success-bg);
+  color: var(--success-fg);
   font-weight: 600;
   font-size: 0.9375rem;
 }
 
 .primaryButton:hover {
-  background: var(--accent-green-hover);
+  background: var(--success-fg);
+  color: var(--bg);
 }
 
 .secondaryButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border);
+  padding: 0.6875rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
   background: var(--surface-muted);
   color: var(--fg);
   font-weight: 600;

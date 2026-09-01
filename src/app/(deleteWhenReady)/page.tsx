@@ -4,7 +4,6 @@
 // parenthesized name keeps it out of the URL, so /dashboard (inside it)
 // still routes normally. Replace this page with your actual home page.
 
-import Link from "next/link";
 import { AuthToggle } from "@/app/components/AuthToggle";
 import { SetupGuide } from "@/app/(deleteWhenReady)/SetupGuide";
 import { SetupPrompt } from "@/app/(deleteWhenReady)/SetupPrompt";
@@ -25,17 +24,20 @@ export default function Page() {
             deploy it.
           </p>
           <div className={styles.heroActions}>
-            <Link
+            <a
               className={styles.primaryButton}
               href="https://github.com/rl3020/AuthTemplate/generate"
               target="_blank"
               rel="noreferrer"
             >
               Use this template
-            </Link>
-            <Link className={styles.secondaryButton} href="#setup-prompt">
+            </a>
+            {/* A plain <a>, not next/link — Link's client-side routing
+                fights the browser's native hash scroll once the page is
+                already scrolled, which is exactly the bug this replaced. */}
+            <a className={styles.secondaryButton} href="#setup-prompt">
               Create with prompt
-            </Link>
+            </a>
           </div>
         </div>
         <div className={styles.grid}>
