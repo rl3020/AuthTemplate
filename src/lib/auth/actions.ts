@@ -84,6 +84,59 @@ export async function signOut() {
   redirect("/auth/login");
 }
 
+// Always redirects to the same "check your email" page whether or not the
+// address has an account — revealing that would let someone enumerate
+// which emails are registered.
+export async function requestPasswordReset(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) {
+    return { error: "Email is required." };
+  }
+
+  // No redirectTo: our recovery email template (supabase/templates/
+  // recovery.html) hardcodes the confirm link itself rather than reading
+  // Supabase's {{ .RedirectTo }} template variable, so this option would
+  // do nothing but add another URL that has to pass the allowlist check.
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(email);
+
+  redirect("/auth/forgot-password/check-email");
+}
+
+// Only reachable with an active session — recovery links go through
+// confirmEmail (type=recovery) first, which signs the user in before
+// redirecting here.
+export async function updatePassword(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (!password) {
+    return { error: "Password is required." };
+  }
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Passwords do not match." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
+}
+
 // Consumes the token from an email confirmation link. Deliberately requires
 // a real form submit rather than firing on GET: mail scanners (Microsoft
 // Defender, Proofpoint, etc.) prefetch every link in an email, which would

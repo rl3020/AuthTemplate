@@ -230,6 +230,13 @@ otp_expiry = 3600
 subject = "Confirm your email"
 content_path = "./supabase/templates/confirmation.html"
 
+# Same reasoning as above, routed through confirmEmail with type=recovery —
+# verifyOtp signs the user in, then /auth/reset-password lets them set a
+# new password.
+[auth.email.template.recovery]
+subject = "Reset your password"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

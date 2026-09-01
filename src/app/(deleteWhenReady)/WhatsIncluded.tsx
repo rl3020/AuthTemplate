@@ -21,8 +21,7 @@ const nodes: Node[] = [
     depth: 2,
     name: "(deleteWhenReady)/",
     type: "folder",
-    note:
-      "Onboarding content only — the landing page you're looking at right now, this file-tree section, the setup guide below, and the /dashboard example. It's a route group: the parentheses keep it out of the URL, so deleting the whole folder won't break any other route. Delete it once you've replaced the home page with your own.",
+    note: "Onboarding content only — the landing page you're looking at right now, this file-tree section, the setup guide below, and the /dashboard example. It's a route group: the parentheses keep it out of the URL, so deleting the whole folder won't break any other route. Delete it once you've replaced the home page with your own.",
     deletable: true,
     defaultOpen: true,
   },
@@ -30,8 +29,7 @@ const nodes: Node[] = [
     depth: 3,
     name: "page.tsx",
     type: "file",
-    note:
-      "The home page, served at \"/\". Renders WhatsIncluded (this section), SetupGuide, and the sign in/up card. Replace this file with your app's real home page once you're wired up.",
+    note: "The home page, served at \"/\". Renders WhatsIncluded (this section), SetupGuide, and the sign in/up card. Replace this file with your app's real home page once you're wired up.",
     deletable: true,
   },
   {
@@ -59,53 +57,58 @@ const nodes: Node[] = [
     depth: 3,
     name: "dashboard/page.tsx",
     type: "file",
-    note:
-      "A working example of a protected page → \"/dashboard\". Calls requireUser() to redirect signed-out visitors, then shows the signed-in user's email with a sign-out button. Copy this pattern for your own protected pages.",
+    note: 'A working example of a protected page → "/dashboard". Calls requireUser() to redirect signed-out visitors, then shows the signed-in user\'s email with a sign-out button. Copy this pattern for your own protected pages.',
     deletable: true,
   },
   {
     depth: 2,
     name: "components/",
     type: "folder",
-    note:
-      "App-wide reusable UI, not tied to a specific route. ThemeToggle.tsx is the dark mode switch mounted in the root layout; AuthToggle.tsx is the sign in / sign up card on this home page, swapping between LoginForm and SignUpForm client-side without navigating to a different page.",
+    note: "App-wide reusable UI, not tied to a specific route. ThemeToggle.tsx is the dark mode switch mounted in the root layout; AuthToggle.tsx is the sign in / sign up card on this home page, swapping between LoginForm and SignUpForm client-side without navigating to a different page.",
     defaultOpen: true,
   },
   {
     depth: 2,
     name: "auth/",
     type: "folder",
-    note:
-      "Every auth route and its shared UI, all in one place — not to be confused with lib/auth/ further down, which holds the actual signUp/signIn/signOut logic this folder calls into.",
+    note: "Every auth route and its shared UI, all in one place — not to be confused with lib/auth/ further down, which holds the actual signUp/signIn/signOut logic this folder calls into.",
     defaultOpen: true,
   },
   {
     depth: 3,
     name: "login/",
     type: "folder",
-    note:
-      "The \"/auth/login\" page. LoginForm.tsx inside it calls signIn() through React's useActionState, which gives you pending state and the last error for free.",
+    note: 'The "/auth/login" page. LoginForm.tsx inside it calls signIn() through React\'s useActionState, which gives you pending state and the last error for free.',
   },
   {
     depth: 3,
     name: "sign-up/",
     type: "folder",
-    note:
-      "The \"/auth/sign-up\" page. SignUpForm.tsx calls signUp() the same way LoginForm calls signIn(), and check-email/ is shown after sign-up when email confirmation is required.",
+    note: 'The "/auth/sign-up" page. SignUpForm.tsx calls signUp() the same way LoginForm calls signIn(), and check-email/ is shown after sign-up when email confirmation is required.',
+  },
+  {
+    depth: 3,
+    name: "forgot-password/",
+    type: "folder",
+    note: 'The "/auth/forgot-password" page. Always redirects to check-email/ regardless of whether the address has an account — revealing that would let someone enumerate registered emails.',
+  },
+  {
+    depth: 3,
+    name: "reset-password/",
+    type: "folder",
+    note: 'The "/auth/reset-password" page — only reachable with an active session, which the recovery link\'s confirm/ step creates before redirecting here. No session means the link was invalid or expired.',
   },
   {
     depth: 3,
     name: "components/",
     type: "folder",
-    note:
-      "Pieces shared between LoginForm and SignUpForm: EmailField, PasswordField (with a show/hide toggle), SubmitButton, and the AuthCard shell every auth page renders inside.",
+    note: "Pieces shared between LoginForm and SignUpForm: EmailField, PasswordField (with a show/hide toggle), SubmitButton, and the AuthCard shell every auth page renders inside.",
   },
   {
     depth: 3,
     name: "confirm/page.tsx",
     type: "file",
-    note:
-      "The landing page for the confirmation email link — requires an actual click before verifying the token, rather than confirming on page load. That matters because mail scanners prefetch every link in an email; a GET-triggered confirmation would get silently consumed by a bot before the user ever opens the message.",
+    note: "The landing page for both the confirmation and password-reset email links — requires an actual click before verifying the token, rather than confirming on page load. That matters because mail scanners prefetch every link in an email; a GET-triggered confirmation would get silently consumed by a bot before the user ever opens the message.",
   },
   {
     depth: 3,
@@ -117,8 +120,7 @@ const nodes: Node[] = [
     depth: 2,
     name: "layout.tsx",
     type: "file",
-    note:
-      "The root layout — wraps every page, loads fonts, and mounts the dark mode toggle plus the pre-hydration script that sets the theme before first paint (so there's no flash of the wrong theme).",
+    note: "The root layout — wraps every page, loads fonts, and mounts the dark mode toggle plus the pre-hydration script that sets the theme before first paint (so there's no flash of the wrong theme).",
   },
   {
     depth: 2,
@@ -131,15 +133,14 @@ const nodes: Node[] = [
     depth: 2,
     name: "auth/",
     type: "folder",
-    note:
-      "The actual authentication logic: Server Actions, session helpers, and a reactive client hook. This is the one app/auth/ above calls into — that folder only has pages and a route handler.",
+    note: "The actual authentication logic: Server Actions, session helpers, and a reactive client hook. This is the one app/auth/ above calls into — that folder only has pages and a route handler.",
     defaultOpen: true,
   },
   {
     depth: 3,
     name: "actions.ts",
     type: "file",
-    note: "signUp, signIn, and signOut — the three Server Actions that call Supabase directly. Every auth form in the template calls into these.",
+    note: "signUp, signIn, signOut, requestPasswordReset, updatePassword, and confirmEmail — the Server Actions that call Supabase directly. Every auth form in the template calls into these.",
   },
   {
     depth: 3,
@@ -151,29 +152,25 @@ const nodes: Node[] = [
     depth: 3,
     name: "useUser.ts",
     type: "file",
-    note:
-      "A reactive client-side hook for \"use client\" components that need live auth state, like a header badge. Not a security check — that's always requireUser() plus Row Level Security.",
+    note: 'A reactive client-side hook for "use client" components that need live auth state, like a header badge. Not a security check — that\'s always requireUser() plus Row Level Security.',
   },
   {
     depth: 2,
     name: "supabase/",
     type: "folder",
-    note:
-      "Three Supabase client helpers, one per runtime: browser, server, and middleware. Using the wrong one is the most common source of auth bugs, so pick deliberately.",
+    note: "Three Supabase client helpers, one per runtime: browser, server, and middleware. Using the wrong one is the most common source of auth bugs, so pick deliberately.",
   },
   {
     depth: 2,
     name: "site.ts",
     type: "file",
-    note:
-      "Builds the email confirmation link sent by Supabase. Auto-detects the deployment URL on Vercel; NEXT_PUBLIC_SITE_URL is an optional override for a custom domain or another host.",
+    note: "Builds the email confirmation link sent by Supabase. Auto-detects the deployment URL on Vercel; NEXT_PUBLIC_SITE_URL is an optional override for a custom domain or another host.",
   },
   {
     depth: 1,
     name: "proxy.ts",
     type: "file",
-    note:
-      "Next's middleware — refreshes the session cookie on every request and redirects signed-out visitors away from protected routes. A UX nicety only, not the real security boundary (requireUser() plus RLS is).",
+    note: "Next's middleware — refreshes the session cookie on every request and redirects signed-out visitors away from protected routes. A UX nicety only, not the real security boundary (requireUser() plus RLS is).",
   },
 ];
 
@@ -200,14 +197,25 @@ function FolderIcon() {
 
 function FileIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M3.5 1.5H9L12.5 5V14.5H3.5V1.5Z"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinejoin="round"
       />
-      <path d="M9 1.5V5H12.5" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+      <path
+        d="M9 1.5V5H12.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -254,7 +262,11 @@ export function WhatsIncluded() {
       <div className={styles.treeWrap}>
         <div
           className={styles.tree}
-          style={!expanded ? { maxHeight: COLLAPSED_MAX_HEIGHT, overflowY: "hidden" } : undefined}
+          style={
+            !expanded
+              ? { maxHeight: COLLAPSED_MAX_HEIGHT, overflowY: "hidden" }
+              : undefined
+          }
         >
           {nodes.map((node, index) => {
             const key = `${index}-${node.name}`;
@@ -273,7 +285,9 @@ export function WhatsIncluded() {
                   >
                     {icon}
                     {node.name}
-                    <span className={styles.hintBulb} aria-hidden="true">💡</span>
+                    <span className={styles.hintBulb} aria-hidden="true">
+                      💡
+                    </span>
                   </button>
                 ) : (
                   <span
@@ -297,7 +311,10 @@ export function WhatsIncluded() {
                     <p className={styles.bubbleText}>
                       {node.note}
                       {node.deletable && (
-                        <span className={styles.treeDelete}> · delete when ready</span>
+                        <span className={styles.treeDelete}>
+                          {" "}
+                          · delete when ready
+                        </span>
                       )}
                     </p>
                   </div>

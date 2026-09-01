@@ -2,16 +2,15 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { signIn } from "@/lib/auth/actions";
+import { requestPasswordReset } from "@/lib/auth/actions";
 import { initialAuthActionState } from "@/lib/auth/types";
 import { EmailField } from "@/app/auth/components/EmailField";
-import { PasswordField } from "@/app/auth/components/PasswordField";
 import { SubmitButton } from "@/app/auth/components/SubmitButton";
 import styles from "@/app/auth/auth.module.css";
 
-export function LoginForm() {
+export function ForgotPasswordForm() {
   const [state, formAction, pending] = useActionState(
-    signIn,
+    requestPasswordReset,
     initialAuthActionState,
   );
 
@@ -21,25 +20,16 @@ export function LoginForm() {
 
       <EmailField />
 
-      <PasswordField
-        id="password"
-        name="password"
-        label="Password"
-        autoComplete="current-password"
+      <SubmitButton
+        pending={pending}
+        label="Send reset link"
+        pendingLabel="Sending…"
       />
 
-      <SubmitButton pending={pending} label="Sign in" pendingLabel="Signing in…" />
-
       <p className={styles.authFooter}>
-        <Link className={styles.authLink} href="/auth/forgot-password">
-          Forgot password?
-        </Link>
-      </p>
-
-      <p className={styles.authFooter}>
-        Don&apos;t have an account?{" "}
-        <Link className={styles.authLink} href="/auth/sign-up">
-          Sign up
+        Remembered your password?{" "}
+        <Link className={styles.authLink} href="/auth/login">
+          Sign in
         </Link>
       </p>
     </form>
