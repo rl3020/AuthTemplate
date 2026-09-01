@@ -202,19 +202,22 @@ const sections: Section[] = [
         bullets: [
           "NEXT_PUBLIC_SUPABASE_URL — your hosted project's API URL",
           "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY — the public key from Project Settings → API (safe to expose client-side — it's not a secret)",
-          "NEXT_PUBLIC_SITE_URL — your production domain, used to build the confirmation email link. You won't know this until after the first deploy — add it and redeploy once you do",
+          "NEXT_PUBLIC_SITE_URL — optional. src/lib/site.ts falls back to Vercel's own VERCEL_PROJECT_PRODUCTION_URL/VERCEL_URL when this isn't set, so on Vercel you only need it to override with a custom domain",
         ],
         panelLabel: "Vercel Env Vars",
         commands: [
           "NEXT_PUBLIC_SUPABASE_URL",
           "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-          "NEXT_PUBLIC_SITE_URL",
         ],
       },
       {
         title: "Add your deployed URL to Supabase",
         description:
-          "Authentication → URL Configuration → Redirect URLs — otherwise the confirmation email link gets rejected.",
+          "Don't just add it in the dashboard — supabase/config.toml's additional_redirect_urls is what actually stays in sync. The dashboard field gets silently overwritten back to localhost the next time the migration workflow runs config push.",
+        bullets: [
+          "Add your production URL (and /auth/confirm) to additional_redirect_urls in supabase/config.toml",
+          "Commit and push — that's what makes it permanent, not the dashboard edit",
+        ],
       },
       {
         title: "Configure a real SMTP provider before you launch",

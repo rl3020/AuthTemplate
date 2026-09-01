@@ -27,20 +27,20 @@ A starting point for Next.js apps that need Supabase auth. It gives you the wiri
 
 **What's already wired**
 
-- Email/password sign-up, login, sign-out, and email confirmation — call `signUp`, `signIn`, `signOut` from `src/lib/auth/actions.ts` and the rest follows
+- Email/password sign-up, login, sign-out, email confirmation, and password reset — call `signUp`, `signIn`, `signOut`, `requestPasswordReset`, `updatePassword` from `src/lib/auth/actions.ts` and the rest follows
 - `getUser`/`requireUser` for reading the session in Server Components, `useUser` for reactive client-side access — see [Authentication](#authentication)
-- `/login` and `/sign-up` pages, wired to those actions with pending state and error display out of the box
+- `/auth/login`, `/auth/sign-up`, `/auth/forgot-password`, and `/auth/reset-password` pages, wired to those actions with pending state and error display out of the box
 - A `profiles` table with Row Level Security already enabled and an `on_auth_user_created` trigger that inserts a row automatically on sign-up — see [supabase/migrations](supabase/migrations)
-- A `/dashboard` route as a working example of a protected page
+- An account settings page (`/settings`) for editing the display name, and a `/dashboard` example that reads it back and greets the user by name
 - Supabase clients for all three runtimes (`src/lib/supabase/`)
-- Automatic session refresh via [src/proxy.ts](src/proxy.ts), which also redirects signed-out visitors away from protected routes and signed-in visitors away from `/login` and `/sign-up`
+- Default-deny session middleware ([src/lib/supabase/proxy.ts](src/lib/supabase/proxy.ts)) — every route requires a signed-in user except `/` and anything under `/auth/*`, so a new protected page needs nothing registered
 - Local Supabase on offset ports, so it won't collide with your other projects
-- GitHub Actions workflow that pushes migrations to production on merge to `main`
-- A site-wide dark mode toggle (top-right of every page), persisted to `localStorage` and falling back to the OS preference
+- A GitHub Actions workflow that pushes both database migrations and auth/email-template config to production on push to `main`
+- A site-wide dark mode toggle, persisted to `localStorage` and falling back to the OS preference
 
 **What's not**
 
-There's no password reset flow and no OAuth providers. Row Level Security is only as good as the policies you write — the `profiles` table above has a working example, but any new table you add needs its own policies; that's the boundary that actually matters, since client-side and Server Action checks can be bypassed but Postgres enforcing RLS can't.
+There's no OAuth providers. Row Level Security is only as good as the policies you write — the `profiles` table above has a working example, but any new table you add needs its own policies; that's the boundary that actually matters, since client-side and Server Action checks can be bypassed but Postgres enforcing RLS can't.
 
 The home page (`src/app/(deleteWhenReady)/page.tsx`) and everything else in that `(deleteWhenReady)` route group — the setup walkthrough, the file-tree overview, and the `/dashboard` example — is onboarding content, not your app. The parenthesized folder name keeps it out of the URL, so `/dashboard` still routes normally. Delete the whole `(deleteWhenReady)` folder once you're wired up and replace `src/app/(deleteWhenReady)/page.tsx` with your actual home page.
 
@@ -125,20 +125,20 @@ npx supabase stop --no-backup  # stops and wipes local data
 
 ## Authentication
 
-The API is five functions across three files. Which one you want depends on where your code runs:
+The API is seven functions across two files. Which one you want depends on where your code runs and whether it needs client-side pending/error state:
 
-| Function                | File                                                | Runs on | Use for                                                        |
-| ------------------------ | ---------------------------------------------------- | ------- | ---------------------------------------------------------------- |
-| `signUp`, `signIn`      | [src/lib/auth/actions.ts](src/lib/auth/actions.ts) | Server  | Form submissions — plug into `useActionState`                    |
-| `signOut`               | [src/lib/auth/actions.ts](src/lib/auth/actions.ts) | Server  | Any form action, no client state needed                          |
-| `getUser`, `requireUser`| [src/lib/auth/session.ts](src/lib/auth/session.ts) | Server  | Server Components — read the user / gate a page                  |
-| `useUser`               | [src/lib/auth/useUser.ts](src/lib/auth/useUser.ts) | Client  | `"use client"` components that need live auth state (not a security check) |
+| Function                                                    | File                                                | Runs on | Use for                                                        |
+| ------------------------------------------------------------ | ---------------------------------------------------- | ------- | ---------------------------------------------------------------- |
+| `signUp`, `signIn`, `requestPasswordReset`, `updatePassword` | [src/lib/auth/actions.ts](src/lib/auth/actions.ts) | Server  | Form submissions — plug into `useActionState`                    |
+| `signOut`, `confirmEmail`                                    | [src/lib/auth/actions.ts](src/lib/auth/actions.ts) | Server  | Form actions with no client state needed                         |
+| `getUser`, `requireUser`                                     | [src/lib/auth/session.ts](src/lib/auth/session.ts) | Server  | Server Components — read the user / gate a page                  |
+| `useUser`                                                    | [src/lib/auth/useUser.ts](src/lib/auth/useUser.ts) | Client  | `"use client"` components that need live auth state (not a security check) |
 
-Everything else (forms, redirects, pending states, error messages, session cookies, the confirmation email link) is already wired to `signUp`/`signIn`/`signOut`.
+Everything else (forms, redirects, pending states, error messages, session cookies, the confirmation and recovery email links) is already wired to these.
 
 ### Adding a form that uses them
 
-`signUp` and `signIn` are built to plug straight into React 19's `useActionState`, which gives you pending state and the last error for free:
+`signUp`, `signIn`, `requestPasswordReset`, and `updatePassword` are built to plug straight into React 19's `useActionState`, which gives you pending state and the last error for free:
 
 ```tsx
 "use client";
@@ -159,41 +159,51 @@ function MyLoginForm() {
 }
 ```
 
-`signOut` takes no input and never needs client state — call it directly as a form action: `<form action={signOut}><button>Sign out</button></form>`.
+`signOut` and `confirmEmail` take no client state — call them directly as a form action: `<form action={signOut}><button>Sign out</button></form>`.
 
-[src/app/login/LoginForm.tsx](src/app/login/LoginForm.tsx) and [src/app/sign-up/SignUpForm.tsx](src/app/sign-up/SignUpForm.tsx) are the working versions of the snippet above — copy the pattern for any new auth form (password reset, an invite flow, etc.).
+[src/app/auth/login/LoginForm.tsx](src/app/auth/login/LoginForm.tsx), [src/app/auth/sign-up/SignUpForm.tsx](src/app/auth/sign-up/SignUpForm.tsx), [src/app/auth/forgot-password/ForgotPasswordForm.tsx](src/app/auth/forgot-password/ForgotPasswordForm.tsx), and [src/app/auth/reset-password/ResetPasswordForm.tsx](src/app/auth/reset-password/ResetPasswordForm.tsx) are the working versions of the snippet above — copy the pattern for any new auth form.
 
 ### What happens on sign-up
 
 `signUp` calls Supabase, then branches on whether a session came back:
 
 - **Email confirmations off** (the local dev default — `enable_confirmations = false` in [supabase/config.toml](supabase/config.toml)) — Supabase returns a session immediately, so the user is already logged in. Redirects straight to `/dashboard`.
-- **Email confirmations on** (typical in production) — no session yet. Redirects to `/sign-up/check-email`. The confirmation link points at [src/app/auth/confirm/route.ts](src/app/auth/confirm/route.ts), which verifies the token and redirects to `/dashboard`.
+- **Email confirmations on** (typical in production) — no session yet. Redirects to `/auth/sign-up/check-email`. The confirmation link points at [src/app/auth/confirm/page.tsx](src/app/auth/confirm/page.tsx), a landing page that requires an actual click before verifying — the click submits a form to the `confirmEmail` Server Action, which calls `verifyOtp` and redirects to `/dashboard`. It's deliberately not verified on page load (a GET): mail scanners (Microsoft Defender, Proofpoint, etc.) prefetch every link in an email, and a GET-triggered confirmation would get silently consumed by a bot before the user ever opens the message.
 
-The confirmation link is built from `NEXT_PUBLIC_SITE_URL` (see `.env.example`) — set it to your real domain in production, and add that domain to **Supabase dashboard → Authentication → URL Configuration → Redirect URLs**, or the link will be rejected.
+The confirmation link is built from `NEXT_PUBLIC_SITE_URL` if set (see `.env.example`), otherwise it falls back to Vercel's own `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL` — see [src/lib/site.ts](src/lib/site.ts). You only need to set it yourself for a custom domain or a non-Vercel host.
+
+**Don't just add your production URL in the Supabase dashboard.** `supabase/config.toml`'s `additional_redirect_urls` is what actually stays in sync — the migration workflow runs `supabase config push` on every push to `main` that touches `supabase/`, which overwrites the dashboard's redirect URLs back to whatever's in that file. Add your production URL (and its `/auth/confirm` path) to `additional_redirect_urls` in `supabase/config.toml`, then commit and push, or the confirmation link will start getting rejected again the next time any migration ships.
 
 **Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. Fix it under **Authentication → Emails → SMTP Settings** with your own provider (Resend, SendGrid, Postmark), then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
 
+### What happens on forgot/reset password
+
+`requestPasswordReset` always redirects to `/auth/forgot-password/check-email`, whether or not the address has an account — revealing that would let someone enumerate registered emails. If it does have an account, Supabase emails a recovery link that also points at `/auth/confirm`, with `type=recovery`; clicking it calls `confirmEmail`, which verifies the token, signs the user in, and redirects to `/auth/reset-password`. That page is only reachable with an active session — no session means the link was invalid or expired. From there, `updatePassword` sets the new password and redirects to `/dashboard`.
+
 ### Routing
 
-| Route                  | What                                                             |
-| ----------------------- | ----------------------------------------------------------------- |
-| `/login`                | Sign-in form                                                       |
-| `/sign-up`              | Sign-up form                                                       |
-| `/sign-up/check-email`  | Shown after sign-up when confirmation is required                  |
-| `/auth/confirm`         | Route Handler — verifies the emailed confirmation token             |
-| `/auth/error`           | Generic auth error page                                            |
-| `/dashboard`            | Example protected page — shows the signed-in user, has sign-out     |
+| Route                              | What                                                                 |
+| ------------------------------------ | ----------------------------------------------------------------------- |
+| `/auth/login`                       | Sign-in form                                                             |
+| `/auth/sign-up`                     | Sign-up form                                                             |
+| `/auth/sign-up/check-email`         | Shown after sign-up when confirmation is required                        |
+| `/auth/forgot-password`             | Request a password reset link                                            |
+| `/auth/forgot-password/check-email` | Shown after every reset request, regardless of whether the email exists  |
+| `/auth/reset-password`              | Set a new password — only reachable with the session the recovery link creates |
+| `/auth/confirm`                     | Click-through landing page for both the confirmation and recovery links  |
+| `/auth/error`                       | Generic auth error page                                                  |
+| `/dashboard`                        | Example protected page — shows the signed-in user, links to Settings     |
+| `/settings`                         | Account settings — edit display name                                     |
 
 ### Reading the current user — server side
 
-`getUser()` and `requireUser()` in [src/lib/auth/session.ts](src/lib/auth/session.ts) are for Server Components. `getUser()` returns the user or `null`; `requireUser()` calls it and redirects to `/login` if there isn't one:
+`getUser()` and `requireUser()` in [src/lib/auth/session.ts](src/lib/auth/session.ts) are for Server Components. `getUser()` returns the user or `null`; `requireUser()` calls it and redirects to `/auth/login` if there isn't one:
 
 ```tsx
 import { requireUser } from "@/lib/auth/session";
 
 export default async function DashboardPage() {
-  const user = await requireUser(); // redirects to /login if signed out
+  const user = await requireUser(); // redirects to /auth/login if signed out
   return <p>Signed in as {user.email}</p>;
 }
 ```
@@ -213,7 +223,7 @@ import { useUser } from "@/lib/auth/useUser";
 export function HeaderBadge() {
   const { user, loading } = useUser();
   if (loading) return null;
-  return user ? <span>{user.email}</span> : <Link href="/login">Sign in</Link>;
+  return user ? <span>{user.email}</span> : <Link href="/auth/login">Sign in</Link>;
 }
 ```
 
@@ -221,10 +231,9 @@ export function HeaderBadge() {
 
 ### Protecting a new route
 
-Two steps, and they serve different purposes — do both:
+Every route requires a signed-in user by default — [src/lib/supabase/proxy.ts](src/lib/supabase/proxy.ts) only allow-lists `"/"` and anything under `/auth/*` as public. Add a page anywhere else and the proxy already redirects signed-out visitors to `/auth/login` before it renders; there's nothing to register for a new protected route.
 
-1. Add its prefix to `PROTECTED_PREFIXES` in [src/lib/supabase/proxy.ts](src/lib/supabase/proxy.ts) so signed-out visitors get redirected to `/login` before the page even renders. **This is a UX convenience, not the security boundary** — see the warning below.
-2. Call `requireUser()` at the top of the page itself, as `/dashboard` does. This is the check that can't be bypassed.
+That redirect is still a UX convenience, not the security boundary — see the warning below for why a Server Action can bypass it. Call `requireUser()` at the top of the page itself, as `/dashboard` and `/settings` do. That's the check that can't be bypassed.
 
 ---
 
@@ -248,7 +257,7 @@ const supabase = await createClient();
 
 > **Placement matters.** In Next 16, middleware is a file named `proxy.ts` that must sit beside your `app/` directory. Because this project uses `src/app/`, the file lives at `src/proxy.ts`. Put it at the repo root instead and Next compiles it but never runs it — no error, no warning, sessions just silently stop refreshing. Confirm it's active by looking for `ƒ Proxy (Middleware)` in `npm run build` output.
 
-> **The proxy is not your security boundary.** A Server Action isn't its own route — it's a POST back to whatever page called it, identified only by a `next-action` header. The proxy's matcher can't see that header; it only sees the path. Exclude a path from the matcher (or move a form to a page outside `PROTECTED_PREFIXES`) and any Server Action reachable from it loses its guard silently — no error, no failing build. [dashboard/page.tsx](src/app/(deleteWhenReady)/dashboard/page.tsx) shows the pattern to follow: re-check `getUser()` inside the protected page itself, and do the same inside any Server Action that touches private data. Then put Row Level Security on every table, so Postgres refuses the query even if every check above it is wrong.
+> **The proxy is not your security boundary.** A Server Action isn't its own route — it's a POST back to whatever page called it, identified only by a `next-action` header, which [src/proxy.ts](src/proxy.ts)'s broad matcher can't see; it only sees the path. Any Server Action reachable from a public page (`/` or anything under `/auth/*`) runs without the proxy's redirect ever kicking in — no error, no failing build. [dashboard/page.tsx](src/app/(deleteWhenReady)/dashboard/page.tsx) shows the pattern to follow: re-check `getUser()` inside the protected page itself, and do the same inside any Server Action that touches private data. Then put Row Level Security on every table, so Postgres refuses the query even if every check above it is wrong.
 
 ---
 
@@ -277,9 +286,16 @@ NEXT_PUBLIC_SUPABASE_URL             = https://<your-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = <your production publishable key>
 ```
 
+`NEXT_PUBLIC_SITE_URL` is optional here — see [What happens on sign-up](#what-happens-on-sign-up) above. Only set it if you're using a custom domain or deploying somewhere other than Vercel.
+
 ### Migration CI
 
-[.github/workflows/migrate.yml](.github/workflows/migrate.yml) runs `supabase db push` on every push to `main` that touches `supabase/migrations/**`. It needs three repository secrets:
+[.github/workflows/migrate.yml](.github/workflows/migrate.yml) runs on every push to `main` that touches `supabase/migrations/**`, `supabase/config.toml`, or `supabase/templates/**`, and does two things in order:
+
+1. `supabase db push` — applies pending migrations.
+2. `supabase config push` — syncs auth settings and the confirmation/recovery email templates in `supabase/config.toml`, including `additional_redirect_urls`.
+
+It needs three repository secrets:
 
 | Secret                  | Where to find it                         |
 | ----------------------- | ---------------------------------------- |
@@ -289,6 +305,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = <your production publishable key>
 
 Until those secrets are set the workflow fails harmlessly — it has no project to connect to.
 
+**Step 2 fails on the free tier until you configure custom SMTP** — Supabase rejects `config push`'s email template changes on its default mailer with `Email template modification is not available for free tier projects using the default email provider`. That's expected and doesn't affect step 1; your migrations still land even if the job ends red. Configure SMTP (see above), then re-run the workflow from the Actions tab.
+
 ---
 
 ## Project structure
@@ -296,42 +314,71 @@ Until those secrets are set the workflow fails harmlessly — it has no project 
 ```
 src/
 ├── app/
-│   ├── layout.tsx              # Root layout — mounts ThemeToggle, theme-init script
-│   ├── globals.css             # Reset + shared color/spacing tokens (light + dark)
-│   ├── ThemeToggle.tsx         # Dark mode toggle, shown on every page
-│   ├── ThemeToggle.module.css
-│   ├── AuthToggle.tsx          # Sign in / sign up tab switcher
-│   ├── (deleteWhenReady)/      # Onboarding content only — delete this whole folder
-│   │   ├── page.tsx            #   Home page ("/") — replace with your actual app
-│   │   ├── WhatsIncluded.tsx   #   "What's included" file-tree overview
-│   │   ├── SetupGuide.tsx      #   Step-by-step setup walkthrough
-│   │   ├── CodePanel.tsx       #   Copyable terminal panel used by the guide
+│   ├── layout.tsx                # Root layout — mounts the navbar (ThemeToggle) and the pre-hydration theme script
+│   ├── layout.module.css         # Styles the navbar
+│   ├── globals.css               # Reset + shared color/spacing tokens (light + dark)
+│   ├── favicon.ico
+│   ├── components/                # App-wide reusable UI, not tied to one route
+│   │   ├── ThemeToggle.tsx        #   Dark mode toggle, shown on every page
+│   │   ├── ThemeToggle.module.css
+│   │   ├── AuthToggle.tsx         #   Sign in / sign up tab switcher on the home page
+│   │   ├── AuthToggle.module.css
+│   │   ├── InlineScript.tsx       #   Helper for the pre-hydration theme-init script
+│   │   └── app.module.css         #   Shared form/button/card styles (auth + settings)
+│   ├── (deleteWhenReady)/         # Onboarding content only — delete this whole folder
+│   │   ├── page.tsx                #   Home page ("/") — replace with your actual app
+│   │   ├── WhatsIncluded.tsx       #   "What's included" file-tree overview
+│   │   ├── SetupGuide.tsx          #   Step-by-step setup walkthrough
+│   │   ├── SetupPrompt.tsx         #   Copyable "set up with your AI assistant" prompt
+│   │   ├── CodePanel.tsx           #   Copyable terminal panel used by the guide/prompt
 │   │   ├── page.module.css
-│   │   └── dashboard/page.tsx  #   Example protected page → "/dashboard"
-│   ├── login/
-│   │   ├── page.tsx            # Sign-in page
-│   │   └── LoginForm.tsx       # useActionState + signIn
-│   ├── sign-up/
-│   │   ├── page.tsx            # Sign-up page
-│   │   ├── SignUpForm.tsx      # useActionState + signUp
-│   │   └── check-email/        # Shown when confirmation is required
-│   └── auth/
-│       ├── confirm/route.ts    # Verifies the emailed confirmation token
-│       ├── error/page.tsx      # Generic auth error page
-│       └── auth.module.css     # Shared styles for the auth pages
+│   │   └── dashboard/page.tsx      #   Example protected page → "/dashboard"
+│   ├── auth/                      # Every auth route and its shared UI
+│   │   ├── auth.module.css         #   Auth-specific styles (AuthCard, etc.)
+│   │   ├── components/
+│   │   │   ├── AuthCard.tsx         #   Shell every auth page renders inside
+│   │   │   ├── EmailField.tsx
+│   │   │   ├── PasswordField.tsx    #   Password input with a show/hide toggle
+│   │   │   ├── PasswordField.module.css
+│   │   │   └── SubmitButton.tsx
+│   │   ├── login/
+│   │   │   ├── page.tsx              #   "/auth/login"
+│   │   │   └── LoginForm.tsx         #   useActionState + signIn
+│   │   ├── sign-up/
+│   │   │   ├── page.tsx              #   "/auth/sign-up"
+│   │   │   ├── SignUpForm.tsx        #   useActionState + signUp
+│   │   │   └── check-email/page.tsx  #   Shown when confirmation is required
+│   │   ├── forgot-password/
+│   │   │   ├── page.tsx              #   "/auth/forgot-password"
+│   │   │   ├── ForgotPasswordForm.tsx
+│   │   │   └── check-email/page.tsx
+│   │   ├── reset-password/
+│   │   │   ├── page.tsx              #   "/auth/reset-password"
+│   │   │   └── ResetPasswordForm.tsx
+│   │   ├── confirm/page.tsx          #   Click-through page for confirmation + recovery links
+│   │   └── error/page.tsx            #   Generic auth error page
+│   └── settings/
+│       ├── page.tsx                 #   "/settings" — real, non-deletable protected page
+│       └── DisplayNameForm.tsx
 ├── lib/
 │   ├── auth/
-│   │   ├── actions.ts          # signUp, signIn, signOut (Server Actions)
+│   │   ├── actions.ts          # signUp, signIn, signOut, requestPasswordReset, updatePassword, confirmEmail
 │   │   ├── session.ts          # getUser, requireUser (Server Components)
 │   │   ├── useUser.ts          # useUser (Client Components, reactive)
 │   │   └── types.ts            # AuthActionState, initialAuthActionState
-│   ├── site.ts                 # NEXT_PUBLIC_SITE_URL helper
+│   ├── profile/
+│   │   └── queries.ts          # getProfile(userId) — cache()-wrapped read side
+│   ├── settings/
+│   │   ├── actions.ts          # updateDisplayName
+│   │   └── types.ts
+│   ├── site.ts                 # getSiteUrl() — NEXT_PUBLIC_SITE_URL, with a Vercel auto-detect fallback
 │   └── supabase/                # Client / server / proxy Supabase helpers
-└── proxy.ts                    # Next 16 middleware — session refresh + route gating
+└── proxy.ts                    # Next 16 middleware entry — session refresh + default-deny route gating
 supabase/
-├── config.toml                 # Local stack config (offset ports 54331–54337)
+├── config.toml                 # Local stack config (offset ports 54331–54337); auth settings + email templates pushed to production
+├── templates/                  # confirmation.html, recovery.html — routed through /auth/confirm, not Supabase's default auto-verify-on-GET links
 └── migrations/
     └── 20260830005405_init.sql # profiles table, RLS policies, auto-create trigger
 .github/workflows/
-└── migrate.yml                 # Auto-deploy migrations on merge to main
+└── migrate.yml                 # Pushes migrations + config to production on push to main
 ```

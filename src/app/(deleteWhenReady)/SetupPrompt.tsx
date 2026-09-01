@@ -38,12 +38,11 @@ supabase/migrations/ already has one (the profiles table) — nothing to create.
 Prefer the Vercel CLI so this stays scriptable:
 1. \`npx vercel login\` if I'm not already logged in.
 2. \`npx vercel link\` to connect this project (create a new Vercel project if prompted).
-3. \`npx vercel env add NEXT_PUBLIC_SUPABASE_URL production\` and the same for NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY — each prompts for the value in the terminal; use the hosted values from step 3. For NEXT_PUBLIC_SITE_URL, add a placeholder for now since the real URL isn't known until after the first deploy.
+3. \`npx vercel env add NEXT_PUBLIC_SUPABASE_URL production\` and the same for NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY — each prompts for the value in the terminal; use the hosted values from step 3. Don't bother with NEXT_PUBLIC_SITE_URL — src/lib/site.ts already falls back to Vercel's own VERCEL_PROJECT_PRODUCTION_URL/VERCEL_URL when it's unset, so it's only needed if I'm using a custom domain.
 4. \`npx vercel --prod\` to deploy.
-5. Once it's live, tell me the real production URL, update NEXT_PUBLIC_SITE_URL to match, and redeploy.
 
 ## 8. Connect the deployed URL back to Supabase
-Manual: tell me to add my Vercel URL to Supabase dashboard → Authentication → URL Configuration → Redirect URLs, or the confirmation email link gets rejected.
+Don't just add it in the Supabase dashboard — that alone doesn't stick. supabase/config.toml's additional_redirect_urls is what actually controls this on the hosted project, and the GitHub Actions workflow runs \`supabase config push\` on every migration push, which overwrites the dashboard's redirect URLs back to whatever's in that file. So: add my production URL (and its /auth/confirm path) to additional_redirect_urls in supabase/config.toml, then commit and push — that's what makes it stick, not the dashboard edit.
 
 ## 9. Clean up
 Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. Then update the title and description in src/app/layout.tsx's metadata to match my real project name.
