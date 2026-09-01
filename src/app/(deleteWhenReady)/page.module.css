@@ -144,16 +144,19 @@
   color: var(--surface-muted);
 }
 
+/* Points down between the stacked buttons on mobile, then rotates back to
+   pointing right once they sit side by side at the row breakpoint below. */
 .heroArrow {
-  display: none;
+  display: flex;
   align-items: center;
   color: var(--fg-muted);
   font-size: 1.125rem;
+  transform: rotate(90deg);
 }
 
 @media (min-width: 560px) {
   .heroArrow {
-    display: flex;
+    transform: none;
   }
 }
 
