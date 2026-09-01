@@ -57,8 +57,7 @@ const sections: Section[] = [
         title: "Install Docker Desktop and make sure it's running",
         description:
           "Supabase's local stack (Postgres, auth, storage) runs inside Docker containers on your machine.",
-        note:
-          "New to Docker? It packages a program with everything it needs into a self-contained \"container,\" like a lightweight virtual machine. You don't need to learn it — just:",
+        note: 'New to Docker? It packages a program with everything it needs into a self-contained "container," like a lightweight virtual machine. You don\'t need to learn it — just:',
         noteBullets: [
           "Install Docker Desktop",
           "Open it once so it's running (look for its icon in your menu bar/taskbar)",
@@ -76,7 +75,7 @@ const sections: Section[] = [
       {
         title: "Use this template",
         description:
-          "Click \"Use this template\" on GitHub to get your own copy, then clone it.",
+          'Click "Use this template" on GitHub to get your own copy, then clone it.',
         href: "https://github.com/rl3020/AuthTemplate",
         linkLabel: "github.com/rl3020/AuthTemplate",
         commands: ["git clone <your-repo-url>"],
@@ -88,7 +87,8 @@ const sections: Section[] = [
     steps: [
       {
         title: "Install dependencies and start local Supabase",
-        description: "npm install pulls down (see package.json for the full list):",
+        description:
+          "npm install pulls down (see package.json for the full list):",
         bullets: [
           "Next.js and React — the framework",
           "The Supabase client libraries",
@@ -125,7 +125,8 @@ const sections: Section[] = [
     steps: [
       {
         title: "Create a personal access token",
-        description: "Scope it to this project — it's used by GitHub Actions to push migrations.",
+        description:
+          "Scope it to this project — it's used by GitHub Actions to push migrations.",
         href: "https://supabase.com/dashboard/account/tokens",
         linkLabel: "Account → Access Tokens",
       },
@@ -157,7 +158,8 @@ const sections: Section[] = [
     heading: "Your first migration is already here",
     steps: [
       {
-        title: "This template ships one migration — you don't need to create it",
+        title:
+          "This template ships one migration — you don't need to create it",
         description:
           "It's what created the profiles table you saw in \"What's included\": Row Level Security enabled, plus policies so each user can only read/update their own row.",
         panelLabel: "supabase/migrations/20260830005405_init.sql",
@@ -245,7 +247,7 @@ const numberedSections = sections.map((section) => ({
 export function SetupGuide() {
   return (
     <div className={styles.guideSection}>
-      <h2 className={styles.pageHeading}>Setting up everything</h2>
+      <h2 className={styles.pageHeading}>Setup guide</h2>
       <div className={styles.stepList}>
         {numberedSections.map((section) => (
           <div key={section.heading} className={styles.stepGroup}>
@@ -260,7 +262,9 @@ export function SetupGuide() {
                   <div className={styles.gutter}>
                     <span className={styles.stepNumber}>{step.number}</span>
                   </div>
-                  <div className={hasPanel ? styles.stepRow : styles.stepRowSolo}>
+                  <div
+                    className={hasPanel ? styles.stepRow : styles.stepRowSolo}
+                  >
                     <div className={styles.stepLeft}>
                       <p className={styles.stepHeading}>{step.title}</p>
                       {step.description && (
