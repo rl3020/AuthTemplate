@@ -17,3 +17,24 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
+
+.shell {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  align-self: flex-start;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+.backLink:hover {
+  color: var(--fg);
+}

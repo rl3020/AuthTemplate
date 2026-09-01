@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Raleway } from "next/font/google";
 import { InlineScript } from "@/app/components/InlineScript";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import styles from "@/app/layout.module.css";
@@ -15,10 +15,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Used for section headings (see .sectionHeading in the landing page CSS) —
+// a distinct display font from the body's Geist Sans for visual contrast.
+const raleway = Raleway({
+  variable: "--font-raleway",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "AuthTemplate",
-  description:
-    "A Next.js starting point with Supabase auth already wired up.",
+  description: "A Next.js starting point with Supabase auth already wired up.",
 };
 
 // Runs before hydration so the stored theme applies before first paint —
@@ -48,7 +54,9 @@ export default function RootLayout({
       <head>
         <InlineScript html={themeInitScript} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${raleway.variable}`}
+      >
         <header className={styles.navbar}>
           <ThemeToggle />
         </header>

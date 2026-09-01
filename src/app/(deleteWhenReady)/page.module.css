@@ -238,9 +238,13 @@
 
   .authCol {
     order: initial;
+    /* Stretches this grid item's own box to the full row height (matching
+       guideCol) so sticky has room to track scroll — with align-items:start
+       above, the box would otherwise shrink to the toggle's own height and
+       sticky would have nowhere to stick. */
+    align-self: stretch;
     position: sticky;
     top: 3rem;
-    min-height: 80vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -252,14 +256,25 @@
   margin: 4rem auto 0;
 }
 
-/* Shared by "What's included", "Setting up everything", and each group
-   label ("Local setup" etc.) — one class so all headings on this page stay
-   visually identical by construction, not by three rules staying in sync. */
+/* Shared by each group label ("Local setup" etc.) — one class so they stay
+   visually identical by construction, not by rules staying in sync. */
 .sectionHeading {
   font-size: 1.375rem;
   font-weight: 700;
   color: var(--fg);
   margin: 0;
+}
+
+/* The two top-level titles on this page — "What's included" and "Setting
+   up everything" — get a distinct display font and more room to breathe,
+   setting them apart from the smaller group labels above. */
+.pageHeading {
+  font-family: var(--font-raleway), var(--font-geist-sans), sans-serif;
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  margin: 0 0 0.75rem;
 }
 
 /* position:relative + the ::before rail below let every number circle in

@@ -245,7 +245,7 @@ const numberedSections = sections.map((section) => ({
 export function SetupGuide() {
   return (
     <div className={styles.guideSection}>
-      <h2 className={styles.sectionHeading}>Setting up everything</h2>
+      <h2 className={styles.pageHeading}>Setting up everything</h2>
       <div className={styles.stepList}>
         {numberedSections.map((section) => (
           <div key={section.heading} className={styles.stepGroup}>

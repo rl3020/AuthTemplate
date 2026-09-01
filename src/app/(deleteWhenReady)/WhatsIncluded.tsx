@@ -246,7 +246,7 @@ export function WhatsIncluded() {
 
   return (
     <section className={styles.included}>
-      <h2 className={styles.sectionHeading}>What&apos;s included</h2>
+      <h2 className={styles.pageHeading}>What&apos;s included</h2>
       <p className={styles.includedCaption}>
         Everything not marked &quot;delete when ready&quot; is the actual
         template — keep it. Click a file or folder with a 💡 for details.
