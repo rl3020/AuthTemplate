@@ -35,16 +35,13 @@ export function WhatsIncluded() {
             below.
           </p>
           <div className={styles.calloutNote}>
-            <span aria-hidden="true">💡</span>
-            <div>
-              <p>
-                Why I built free: I don&apos;t want to be blocked on setting
-                up a whole SMTP server and domain just to get an app
-                running. It costs money and takes time. Use the free
-                version to get started quickly. It works, just don&apos;t
-                forget your password :)
-              </p>
-            </div>
+            <p className={styles.calloutBody}>
+              <span aria-hidden="true">💡</span> Why I built free: I
+              don&apos;t want to be blocked on setting up a whole SMTP
+              server and domain just to get an app running. It costs money
+              and takes time. Use the free version to get started quickly.
+              It works, just don&apos;t forget your password :)
+            </p>
           </div>
         </div>
         <FeatureCompareTable />
