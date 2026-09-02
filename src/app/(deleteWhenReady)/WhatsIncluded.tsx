@@ -35,9 +35,11 @@ export function WhatsIncluded() {
             below.
           </p>
           <div className={styles.calloutNote}>
+            <p className={styles.calloutTitle}>
+              <span aria-hidden="true">💡</span> Why I built free
+            </p>
             <p className={styles.calloutBody}>
-              <span aria-hidden="true">💡</span> Why I built free: I
-              don&apos;t want to be blocked on setting up a whole SMTP
+              I don&apos;t want to be blocked on setting up a whole SMTP
               server and domain just to get an app running. It costs money
               and takes time. Use the free version to get started quickly.
               It works, just don&apos;t forget your password :)
