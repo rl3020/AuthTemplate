@@ -30,16 +30,20 @@ export const metadata: Metadata = {
 // Runs before hydration so the stored theme applies before first paint —
 // otherwise the page would flash light mode for dark-mode users. Can't read
 // cookies/headers instead: this needs localStorage, which only exists in
-// the browser.
+// the browser. Dark is the default for first-time visitors (not just an
+// OS-preference fallback) — falls back to it too if storage is unavailable
+// (private browsing, etc.). ThemeToggle still lets anyone switch to light,
+// and that choice persists via localStorage same as before.
 const themeInitScript = `
   (function () {
     try {
       var theme = localStorage.getItem("theme");
-      if (theme === "dark" || theme === "light") {
-        document.documentElement.setAttribute("data-theme", theme);
-      }
+      document.documentElement.setAttribute(
+        "data-theme",
+        theme === "dark" || theme === "light" ? theme : "dark"
+      );
     } catch {
-      // Private browsing or storage disabled — falls back to prefers-color-scheme.
+      document.documentElement.setAttribute("data-theme", "dark");
     }
   })();
 `;

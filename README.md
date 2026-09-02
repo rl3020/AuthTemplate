@@ -48,10 +48,28 @@ The home page (`src/app/(deleteWhenReady)/page.tsx`) and everything else in that
 
 ## 0. Prerequisites
 
-| Tool         | Version                           | Notes                                                                   |
-| ------------ | --------------------------------- | ------------------------------------------------------------------------ |
-| **Node.js**  | 20.19+ (22 LTS or 24 recommended) | Node 20.17 works but emits an engine warning from ESLint's dependencies |
-| **Docker**   | any recent                        | Must be _running_ — Supabase's local stack is containerized             |
+**Local dev only needs the first two** — everything else is only required once you deploy to production.
+
+| Tool                        | Version/Plan                      | Notes                                                                   |
+| ---------------------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| **Node.js**                  | 20.19+ (22 LTS or 24 recommended) | Node 20.17 works but emits an engine warning from ESLint's dependencies |
+| **Docker**                   | any recent                        | Must be _running_ — Supabase's local stack is containerized             |
+| **Supabase account**         | Free tier works, with one caveat below | For your hosted project — [Create a Supabase project](#create-a-supabase-project) |
+| **Vercel account**           | Free (Hobby) tier works           | Or any host that runs Next.js — see [Deploy to Vercel](#deploy-to-vercel) |
+| **GitHub repo**               | —                                  | The migration/config workflow ([.github/workflows/migrate.yml](.github/workflows/migrate.yml)) needs repository secrets — see [Wire up GitHub Actions](#wire-up-github-actions) |
+| **Custom SMTP provider**     | Only if you need forgot/reset password to work | See caveat below — everything else runs with zero email setup |
+| **A domain you own**         | Only alongside SMTP               | SMTP providers only deliver to arbitrary recipients from a domain you've verified via DNS — their sandbox sender (e.g. Resend's `onboarding@resend.dev`) only sends to your own signup email, not real users |
+
+> **Free-tier Supabase blocks custom email templates entirely — this only matters for forgot/reset password.** Sign-up and login work with zero email setup: `enable_confirmations = false` in [supabase/config.toml](supabase/config.toml) means no confirmation email is ever sent, so nothing here blocks you from shipping for free.
+>
+> Forgot/reset password is different — there's no way to reset a password without emailing *something*, and this template's recovery flow only works with its own custom `recovery.html` (the default Supabase template redirects with session tokens in a URL fragment that this app has no code to read — using it isn't just less secure, the flow is non-functional). Pushing that custom template to a free-tier project on Supabase's built-in mailer fails outright:
+>
+> ```
+> unexpected status 400: {"message":"Email template modification is not available for free tier
+> projects using the default email provider. Please upgrade your plan or configure a custom SMTP provider."}
+> ```
+>
+> The CI workflow ([.github/workflows/migrate.yml](.github/workflows/migrate.yml)) skips the template push by default via an `SMTP_CONFIGURED: "false"` flag committed at the top of that file — migrations still deploy either way, so this never blocks shipping. It does mean **forgot/reset password stays broken in production until you flip it on**: upgrade to Supabase Pro, or configure a custom SMTP provider (Resend's free tier — 3,000 emails/month — works fine and unblocks the push). The SMTP route also means owning a domain — providers only deliver to arbitrary recipients from a domain you've verified via DNS records. Set up SMTP under **Authentication → Emails → SMTP Settings**, then edit `SMTP_CONFIGURED` to `"true"` in `migrate.yml`, commit, and re-run the workflow — see [Configure a real SMTP provider before you launch](#deploy-to-vercel).
 
 The Supabase CLI is a `devDependency` in [package.json](package.json), not a global install — `npm install` pulls a version pinned to this repo, and every command runs through `npx supabase ...` so you never need Homebrew, Scoop, or a standalone binary.
 
@@ -168,13 +186,13 @@ function MyLoginForm() {
 `signUp` calls Supabase, then branches on whether a session came back:
 
 - **Email confirmations off** (the local dev default — `enable_confirmations = false` in [supabase/config.toml](supabase/config.toml)) — Supabase returns a session immediately, so the user is already logged in. Redirects straight to `/dashboard`.
-- **Email confirmations on** (typical in production) — no session yet. Redirects to `/auth/sign-up/check-email`. The confirmation link points at [src/app/auth/confirm/page.tsx](src/app/auth/confirm/page.tsx), a landing page that requires an actual click before verifying — the click submits a form to the `confirmEmail` Server Action, which calls `verifyOtp` and redirects to `/dashboard`. It's deliberately not verified on page load (a GET): mail scanners (Microsoft Defender, Proofpoint, etc.) prefetch every link in an email, and a GET-triggered confirmation would get silently consumed by a bot before the user ever opens the message.
+- **Email confirmations on** (typical in production) — no session yet. Redirects to `/auth/sign-up/check-email`. The confirmation link points at [src/app/auth/(email-links)/confirm/page.tsx](src/app/auth/(email-links)/confirm/page.tsx), a landing page that requires an actual click before verifying — the click submits a form to the `confirmEmail` Server Action, which calls `verifyOtp` and redirects to `/dashboard`. It's deliberately not verified on page load (a GET): mail scanners (Microsoft Defender, Proofpoint, etc.) prefetch every link in an email, and a GET-triggered confirmation would get silently consumed by a bot before the user ever opens the message.
 
 The confirmation link is built from `NEXT_PUBLIC_SITE_URL` if set (see `.env.example`), otherwise it falls back to Vercel's own `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL` — see [src/lib/site.ts](src/lib/site.ts). You only need to set it yourself for a custom domain or a non-Vercel host.
 
 **Don't just add your production URL in the Supabase dashboard.** `supabase/config.toml`'s `additional_redirect_urls` is what actually stays in sync — the migration workflow runs `supabase config push` on every push to `main` that touches `supabase/`, which overwrites the dashboard's redirect URLs back to whatever's in that file. Add your production URL (and its `/auth/confirm` path) to `additional_redirect_urls` in `supabase/config.toml`, then commit and push, or the confirmation link will start getting rejected again the next time any migration ships.
 
-**Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. Fix it under **Authentication → Emails → SMTP Settings** with your own provider (Resend, SendGrid, Postmark), then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
+**Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. It also flatly refuses to push custom email templates on the free tier — see the [Prerequisites](#0-prerequisites) caveat, since that's exactly what breaks this template's confirmation-link fix. Fix both under **Authentication → Emails → SMTP Settings** with your own provider (Resend, SendGrid, Postmark), then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
 
 ### What happens on forgot/reset password
 
@@ -327,7 +345,10 @@ src/
 │   │   └── app.module.css         #   Shared form/button/card styles (auth + settings)
 │   ├── (deleteWhenReady)/         # Onboarding content only — delete this whole folder
 │   │   ├── page.tsx                #   Home page ("/") — replace with your actual app
-│   │   ├── WhatsIncluded.tsx       #   "What's included" file-tree overview
+│   │   ├── WhatsIncluded.tsx       #   "What's included" section — Free vs. Production table
+│   │   ├── FeatureCompareTable.tsx #   The Free vs. Production table itself
+│   │   ├── RepoFileStructure.tsx   #   "Repo file structure" section
+│   │   ├── FileTree.tsx            #   The clickable file-tree overview itself
 │   │   ├── SetupGuide.tsx          #   Step-by-step setup walkthrough
 │   │   ├── SetupPrompt.tsx         #   Copyable "set up with your AI assistant" prompt
 │   │   ├── CodePanel.tsx           #   Copyable terminal panel used by the guide/prompt
@@ -355,8 +376,9 @@ src/
 │   │   ├── reset-password/
 │   │   │   ├── page.tsx              #   "/auth/reset-password"
 │   │   │   └── ResetPasswordForm.tsx
-│   │   ├── confirm/page.tsx          #   Click-through page for confirmation + recovery links
-│   │   └── error/page.tsx            #   Generic auth error page
+│   │   └── (email-links)/            #   Route group — landing pages for email links, not primary nav
+│   │       ├── confirm/page.tsx      #   Click-through page for confirmation + recovery links, still "/auth/confirm"
+│   │       └── error/page.tsx        #   Generic auth error page, still "/auth/error"
 │   └── settings/
 │       ├── page.tsx                 #   "/settings" — real, non-deletable protected page
 │       └── DisplayNameForm.tsx

@@ -1,0 +1,212 @@
+/* Token roles for this component, aliased to the app's existing
+   light/dark CSS vars (see globals.css) rather than hardcoded hex — stays
+   theme-reactive for free. */
+.card {
+  --pipe-ink: var(--fg);
+  --pipe-production: var(--success-fg);
+  --pipe-free: var(--fg-muted);
+  --pipe-flag: var(--warn);
+
+  position: relative;
+  min-width: 0;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.card[data-status="production"] {
+  border-color: var(--pipe-production);
+}
+
+/* The commit-style node straddles the card's top edge — half in, half out —
+   so the branch line above visibly plugs into this card instead of
+   stopping in empty space above a box that happens to be nearby. */
+.node {
+  position: absolute;
+  top: -6px;
+  left: 1.75rem;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--pipe-free);
+}
+
+.card[data-status="production"] .node {
+  background: var(--pipe-production);
+}
+
+/* Stacked-mobile fallback for the fork's curve connector in
+   SetupGuide.tsx/page.module.css: a plain divider between the two cards
+   instead of a diverging line, which only reads correctly side by side. */
+@media (max-width: 799px) {
+  .card + .card {
+    margin-top: 1.75rem;
+  }
+
+  .card + .card::before {
+    content: "or";
+    position: absolute;
+    top: -1.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0 0.5rem;
+    background: var(--bg);
+    color: var(--fg-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+}
+
+.header {
+  margin-bottom: 1.25rem;
+}
+
+/* A left-accent tag with a status dot — not a rounded-full ALL-CAPS pill —
+   but otherwise the site's normal text (sans, regular weight) rather than
+   a CLI affectation. */
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.25rem 0.625rem 0.25rem 0.5rem;
+  border-left: 3px solid var(--pipe-free);
+  background: var(--surface-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pipe-ink);
+}
+
+.card[data-status="production"] .statusTag {
+  border-left-color: var(--pipe-production);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pipe-free);
+}
+
+.card[data-status="production"] .statusDot {
+  background: var(--pipe-production);
+}
+
+.tagline {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+.card[data-status="production"] .tagline {
+  color: var(--pipe-production);
+}
+
+.step + .step {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--border);
+}
+
+.stepTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--pipe-ink);
+}
+
+.stepBody {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.plainNote {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+/* CodePanel (imported in TrackCard.tsx) already carries its own spacing;
+   this just adds the same top gap every other element in this card gets. */
+.panelWrap {
+  margin-top: 1rem;
+}
+
+/* --- Flag note --- */
+
+/* Styled like a CI log annotation (a labeled key=value + left accent bar),
+   not a generic blue-outline tip box — this content is genuinely about a
+   config flag, so the visual says that directly. font-family only set on
+   the actual identifier (SMTP_CONFIGURED=false) — everything around it is
+   the site's normal text, not a monospace affectation. */
+.flagNote {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  border-left: 3px solid var(--pipe-flag);
+  background: var(--surface-muted);
+}
+
+.flagChip {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pipe-flag);
+}
+
+.flagChip code {
+  font-family: var(--font-geist-mono);
+}
+
+.flagBody {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.flagBullets {
+  margin: 0.5rem 0 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.flagBullets li {
+  padding-left: 1.125rem;
+  position: relative;
+}
+
+.flagBullets li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: var(--pipe-flag);
+}
+
+.flagLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pipe-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.flagLink:focus-visible,
+.statusTag:focus-visible {
+  outline: 2px solid var(--pipe-production);
+  outline-offset: 2px;
+}

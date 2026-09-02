@@ -28,14 +28,22 @@
   -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 10%, transparent 75%);
 }
 
+/* Lives inside .guideCol now (see .grid below), not centered full-width
+   above it — that's what puts the AuthToggle card directly beside the
+   intro instead of floating next to WhatsIncluded further down the page. */
 .header {
-  max-width: var(--max-width);
-  margin: 0 auto 3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   text-align: center;
+}
+
+@media (min-width: 960px) {
+  .header {
+    align-items: flex-start;
+    text-align: left;
+  }
 }
 
 .title {
@@ -83,7 +91,7 @@
 }
 
 /* Same green language as the Docker/SMTP callouts elsewhere on this page
-   (--success-bg/--success-fg) — a tinted fill with a matching border,
+   (--success-fg for border/text) — white fill with a colored border,
    rather than a solid block of color. */
 .primaryButton {
   display: inline-flex;
@@ -92,15 +100,14 @@
   padding: 0.6875rem 1.5rem;
   border-radius: var(--radius);
   border: 1.5px solid var(--success-fg);
-  background: var(--success-bg);
+  background: var(--bg);
   color: var(--success-fg);
   font-weight: 600;
   font-size: 0.9375rem;
 }
 
 .primaryButton:hover {
-  background: var(--success-fg);
-  color: var(--bg);
+  background: var(--success-bg);
 }
 
 .secondaryButton {
@@ -109,15 +116,15 @@
   gap: 0.5rem;
   padding: 0.6875rem 1.5rem;
   border-radius: var(--radius);
-  border: 1.5px solid var(--border);
-  background: var(--surface-muted);
+  border: 1.5px solid var(--fg);
+  background: var(--bg);
   color: var(--fg);
   font-weight: 600;
   font-size: 0.9375rem;
 }
 
 .secondaryButton:hover {
-  background: var(--border);
+  background: var(--surface-muted);
 }
 
 /* Marks the two buttons as ordered steps, not independent alternatives —
@@ -169,7 +176,43 @@
 }
 
 .included {
-  margin-bottom: 1rem;
+  max-width: var(--max-width);
+  margin: 0 auto 3rem;
+}
+
+/* Same shape as .included above — its own full-width section rather than
+   packed into WhatsIncluded, since "what does this repo look like" is a
+   distinct question from "what does free vs. production get me." */
+.repoStructure {
+  max-width: var(--max-width);
+  margin: 0 auto 1rem;
+}
+
+@media (min-width: 900px) {
+  .includedGrid {
+    display: grid;
+    /* The table needs more room than the prose column — three sub-columns
+       of its own vs. one paragraph — so it gets the bigger share. */
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: 3rem;
+  }
+
+  /* .compareWrap's own margin-top (kept for the mobile stacked layout, to
+     separate it from the text above) would otherwise push the table below
+     the top of the text column here, since grid's align-items: start
+     aligns item boxes, not their content — margins still shift within. */
+  .includedGrid .compareWrap {
+    margin-top: 0;
+  }
+}
+
+/* Scoped to this section specifically — .calloutNote itself has no margin
+   (elsewhere it sits inside a flex column that already supplies the gap
+   via .stepLeft), but here it follows a plain <p> with nothing to space
+   them apart. */
+.includedGrid .calloutNote {
+  margin-top: 1.25rem;
 }
 
 .includedCaption {
@@ -178,23 +221,81 @@
   margin: 0.25rem 0 0;
 }
 
-.featureList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1rem 0 0;
-  padding: 0;
-  list-style: none;
+/* Theme-aware accent instead of a hardcoded color — var(--success-fg)
+   already reads as "important/production" everywhere else on this page
+   (step numbers, the Production track), so it pops without introducing a
+   one-off color, and it flips correctly in both light and dark mode. */
+.includedLead {
+  font-weight: 700;
+  color: var(--success-fg);
 }
 
-.featureItem {
-  padding: 0.375rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--surface-muted);
-  font-size: 0.8125rem;
+/* overflow-x: auto on the wrapper, not the table itself — same reasoning
+   as .treeWrap elsewhere in this file: a table can't shrink below its
+   content's intrinsic width, so the scroll boundary has to live one level
+   up or the whole page would gain horizontal scroll on narrow viewports.
+   Also gives the rounded-corner clip a container to clip against — a
+   border-collapse table can't take its own border-radius — and an opaque
+   background so .hero::before's decorative grid pattern behind this
+   section doesn't show through the table's cell gaps. */
+.compareWrap {
+  margin: 1rem 0;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  overflow-x: auto;
+}
+
+/* table-layout: fixed (with the <colgroup> widths in FeatureCompareTable)
+   instead of the browser's default auto-sizing — auto-layout expands each
+   column to fit its content's preferred width regardless of the min-width
+   floor below, which is exactly what was overflowing the column at some
+   viewport widths. Fixed layout caps each column and wraps instead. */
+.compareTable {
+  width: 100%;
+  min-width: 420px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.compareColLabel {
+  width: 42%;
+}
+
+.compareTable th,
+.compareTable td {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--panel-border);
+  text-align: left;
+}
+
+/* Deliberately dark regardless of light/dark mode — same "always-dark"
+   convention as .panel/.panelHeader elsewhere in this file, not the usual
+   var(--fg)/var(--bg) pair (which would invert to a light header in dark
+   mode instead of staying black). */
+.compareTable thead th {
+  background: var(--panel-header-bg);
+  color: var(--panel-fg);
+  font-weight: 600;
+}
+
+.compareTable thead th[data-accent="secure"] {
+  color: var(--success-fg);
+}
+
+.compareTable tbody th {
   font-weight: 500;
-  color: var(--fg);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.compareYes {
+  color: var(--success-fg);
+}
+
+.compareNo {
+  color: var(--fg-muted);
 }
 
 .treeWrap {
@@ -333,36 +434,41 @@
   display: block;
   margin: 0.75rem auto 0;
   padding: 0.5rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--surface-muted);
+  border: 1px solid var(--fg);
+  border-radius: var(--radius);
+  background: var(--bg);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--fg);
 }
 
 .expandButton:hover {
-  background: var(--border);
+  background: var(--surface-muted);
 }
 
-/* This grid only wraps the hero (WhatsIncluded) — the toggle is sticky
-   through here, then SetupGuide runs full-width below, outside this grid,
-   so the toggle intentionally stops following the scroll once the guide
-   begins rather than trailing the whole (much longer) page. */
+/* This grid only wraps the intro header + AuthToggle — deliberately short,
+   so the toggle sits right beside the intro instead of stretching (via its
+   sticky positioning) down past the much taller WhatsIncluded/file-tree
+   sections that used to share this row. Those run full-width below,
+   outside this grid, same as SetupGuide already did. */
 .grid {
   display: flex;
   flex-direction: column;
   gap: 3rem;
   max-width: var(--max-width);
-  margin: 0 auto;
+  margin: 0 auto 4rem;
 }
 
 .guideCol {
   min-width: 0;
 }
 
+/* Mobile: natural DOM order puts the header first, the form below it —
+   centered, since AuthToggle's own .card caps out at 360px and would
+   otherwise sit flush left in this full-width column. */
 .authCol {
-  order: -1;
+  display: flex;
+  justify-content: center;
 }
 
 @media (min-width: 960px) {
@@ -374,7 +480,6 @@
   }
 
   .authCol {
-    order: initial;
     /* Stretches this grid item's own box to the full row height (matching
        guideCol) so sticky has room to track scroll — with align-items:start
        above, the box would otherwise shrink to the toggle's own height and
@@ -382,7 +487,6 @@
     align-self: stretch;
     position: sticky;
     top: 3rem;
-    display: flex;
     align-items: center;
     justify-content: center;
   }
@@ -403,7 +507,60 @@
   color: var(--fg-muted);
   font-size: 0.9375rem;
   margin: 0.25rem 0 0;
-  max-width: 70ch;
+}
+
+/* Copy prompt sits up here next to the toggle (not down by Show full
+   prompt) so it's reachable without expanding the collapsed box first. */
+.promptHeaderRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* .expandButton's own margin (block + auto, meant to self-center it below
+   the collapsed box elsewhere on this page) would fight this row's own
+   flex alignment — reset it back to a plain inline button here. */
+.promptHeaderRow .expandButton {
+  margin: 0;
+}
+
+/* inline-flex (not the full-width flex the login/signup toggle uses) —
+   sized to its own content instead of stretching across this section's
+   full width, which read as an oversized gray bar. Colored per-tab rather
+   than a shared active-pill background, so Production reads green the
+   instant it's picked, matching that track's accent everywhere else on
+   this page. */
+.versionToggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-full);
+}
+
+.versionTab {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.versionTab[data-active="true"] {
+  background: var(--surface-active);
+  color: var(--fg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.versionTab[data-accent="secure"][data-active="true"] {
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 
 /* white-space: pre-wrap (not pre) keeps the numbered-list line breaks
@@ -422,6 +579,13 @@
   white-space: pre-wrap;
 }
 
+/* The two prompts read as near-identical walls of text at a glance (they
+   share steps 1-8 verbatim) — a background swap makes the switch obvious
+   the instant you click the toggle, not just on close reading. */
+.promptBox[data-version="production"] {
+  background: var(--bg);
+}
+
 .promptActions {
   display: flex;
   flex-wrap: wrap;
@@ -432,9 +596,10 @@
 /* Shared by each group label ("Local setup" etc.) — one class so they stay
    visually identical by construction, not by rules staying in sync. */
 .sectionHeading {
+  font-family: var(--font-raleway), var(--font-geist-sans), sans-serif;
   font-size: 1.375rem;
   font-weight: 700;
-  color: var(--fg);
+  color: var(--fg-muted);
   margin: 0;
 }
 
@@ -534,7 +699,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--fg);
+  background: var(--success-fg);
   font-family: var(--font-geist-mono);
   font-size: 0.75rem;
   font-weight: 600;
@@ -585,8 +750,12 @@
   gap: 0.625rem;
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
-  background: var(--success-bg);
-  border: 1px solid var(--success-fg);
+  /* --info-bg/--info-fg are a dedicated pair (see globals.css), same
+     light-fill-plus-matching-text pattern as --success-bg/--success-fg —
+     --info-fg alone is tuned for contrast against --info-bg specifically,
+     so both come from the same pair rather than mixing in --folder. */
+  background: var(--info-bg);
+  border: 1px solid var(--info-fg);
 }
 
 .calloutNote span {
@@ -598,7 +767,7 @@
 .calloutNote p {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--success-fg);
+  color: var(--info-fg);
 }
 
 .calloutNote .bulletList {
@@ -606,7 +775,7 @@
 }
 
 .calloutNote .bulletList li {
-  color: var(--success-fg);
+  color: var(--info-fg);
 }
 
 .stepLink {
@@ -625,6 +794,54 @@
 
 .stepLink:hover {
   background: var(--border);
+}
+
+.forkIntro {
+  color: var(--fg-muted);
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+}
+
+/* "Choose your path" above is the last row inside .stepList, so the trunk's
+   continuous rail (.stepList::before) already runs right up to it with no
+   gap — this connector is a deliberately separate, centered glyph below
+   that, not a continuation of the rail. It's centered because each curve
+   ends above its own column's horizontal center (25%/75% of the row);
+   trying to land it on the trunk's left-aligned 16px rail instead would
+   mean stretching one side's curve across the whole row width while the
+   other barely moves. Desktop only — see .forkTracks below for the mobile
+   fallback (a plain "or" divider between stacked cards). */
+.forkConnector {
+  display: none;
+}
+
+@media (min-width: 800px) {
+  .forkConnector {
+    display: block;
+    width: 100%;
+    height: 3rem;
+    margin-top: 1.5rem;
+    stroke: var(--border);
+  }
+}
+
+.forkTracks {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 800px) {
+  .forkTracks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* start, not stretch — a short Free card next to a long Production
+       card shouldn't force the short one to grow into a mostly-empty box */
+    align-items: start;
+    gap: 0 3rem;
+    margin-top: 0;
+  }
 }
 
 /* Dark terminal-style panel — deliberate contrast against the light page. */
