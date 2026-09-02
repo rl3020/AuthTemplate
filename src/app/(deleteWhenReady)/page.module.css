@@ -779,9 +779,14 @@
   opacity: 0.6;
 }
 
+/* Title (icon inline, not its own column) + body, stacked — the earlier
+   version gave the icon its own flex column sized to the tallest sibling,
+   which read as the icon "taking up" a tall empty strip next to a short
+   line of text. Icon now sits inline as part of the title's own text. */
 .calloutNote {
   display: flex;
-  gap: 0.625rem;
+  flex-direction: column;
+  gap: 0.375rem;
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
   /* --info-bg/--info-fg are a dedicated pair (see globals.css), same
@@ -792,20 +797,21 @@
   border: 1px solid var(--info-fg);
 }
 
-.calloutNote span {
-  flex-shrink: 0;
-  font-size: 1rem;
-  line-height: 1.5;
+.calloutTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--info-fg);
 }
 
-.calloutNote p {
+.calloutBody {
   margin: 0;
   font-size: 0.875rem;
   color: var(--info-fg);
 }
 
 .calloutNote .bulletList {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .calloutNote .bulletList li {

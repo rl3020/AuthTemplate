@@ -10,6 +10,7 @@ type Step = {
   title: string;
   description?: string;
   bullets?: string[];
+  noteTitle?: string;
   note?: string;
   noteBullets?: string[];
   href?: string;
@@ -57,12 +58,8 @@ const sections: Section[] = [
         title: "Install Docker Desktop and make sure it's running",
         description:
           "Supabase's local stack (Postgres, auth, storage) runs inside Docker containers on your machine.",
-        note: 'New to Docker? It packages a program with everything it needs into a self-contained "container," like a lightweight virtual machine. You don\'t need to learn it — just:',
-        noteBullets: [
-          "Install Docker Desktop",
-          "Open it once so it's running (look for its icon in your menu bar/taskbar)",
-          "Leave it running in the background — nothing else in this guide asks you to touch it directly",
-        ],
+        noteTitle: "New to Docker?",
+        note: "Think of containers as lightweight, self-contained environments. For this guide, just install Docker Desktop and leave it running.",
         href: "https://docs.docker.com/get-docker/",
         linkLabel: "Get Docker",
         commands: ["docker info"],
@@ -77,7 +74,8 @@ const sections: Section[] = [
           "A custom SMTP provider (e.g. Resend) — not optional, see the callout below",
           "A domain you own — SMTP providers only deliver to arbitrary recipients from a domain you've verified via DNS",
         ],
-        note: "Why SMTP (and a domain) isn't optional: Supabase's free tier flatly refuses to push custom email templates on its own built-in mailer. This template ships custom confirmation/recovery templates — required for the click-through email-confirmation fix later in this guide — so without your own SMTP provider, the production config push fails and you're stuck on Supabase's default template, which reopens the mail-scanner vulnerability the fix exists to close. And SMTP providers' sandbox senders (e.g. Resend's onboarding@resend.dev) only deliver to your own signup email — sending to real users needs a domain you've verified via DNS.",
+        noteTitle: "Why isn't SMTP optional?",
+        note: "Supabase's free tier flatly refuses to push custom email templates on its own built-in mailer, and this template's click-through confirmation fix needs its own custom template — so without your own SMTP provider, the production config push fails and you're stuck on Supabase's default template, reopening the mail-scanner vulnerability the fix exists to close. SMTP providers' sandbox senders (e.g. Resend's onboarding@resend.dev) also only deliver to your own signup email, so real users need a domain you've verified via DNS too.",
       },
     ],
   },
@@ -320,11 +318,11 @@ function StepNote({ step }: { step: Step }) {
   if (!step.note) return null;
   return (
     <div className={styles.calloutNote}>
-      <span aria-hidden="true">💡</span>
-      <div>
-        <p>{step.note}</p>
-        {step.noteBullets && <StepBullets items={step.noteBullets} />}
-      </div>
+      <p className={styles.calloutTitle}>
+        <span aria-hidden="true">💡</span> {step.noteTitle ?? "Note"}
+      </p>
+      <p className={styles.calloutBody}>{step.note}</p>
+      {step.noteBullets && <StepBullets items={step.noteBullets} />}
     </div>
   );
 }
