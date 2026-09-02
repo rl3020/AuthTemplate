@@ -117,18 +117,10 @@ export function SetupPrompt() {
         when creating a Supabase project or handling secrets.
       </p>
       <p className={styles.promptCaption}>
-        It checks in with you at each step and never asks you to paste a
-        secret into the chat itself.
-      </p>
-      <p className={styles.promptCaption}>
-        Both prompts are identical through step 8 (deploying the app itself)
-        — they only diverge at step 9. <strong>Free</strong> stops there:
-        zero email setup, everything works except forgot/reset password.{" "}
-        <strong>Production</strong> adds a real SMTP provider and flips the
-        SMTP_CONFIGURED flag in the deploy workflow, which gets forgot/reset
-        password working too — at the cost of needing a domain and an SMTP
-        account. Pick whichever matches what you&apos;re building; switching
-        later just means running the other prompt.
+        Both prompts are identical through step 8 — they only diverge at
+        step 9. <strong>Free</strong> skips email setup entirely
+        (forgot/reset password won&apos;t work); <strong>Production</strong>{" "}
+        adds SMTP so it does. Switch anytime by running the other prompt.
       </p>
       <div className={styles.promptHeaderRow}>
         <div className={styles.versionToggle}>
