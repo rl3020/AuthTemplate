@@ -250,17 +250,20 @@
    instead of the browser's default auto-sizing — auto-layout expands each
    column to fit its content's preferred width regardless of the min-width
    floor below, which is exactly what was overflowing the column at some
-   viewport widths. Fixed layout caps each column and wraps instead. */
+   viewport widths. Fixed layout caps each column and wraps instead.
+   No min-width here on purpose — combined with tbody th's white-space:
+   nowrap below, an earlier version forced this past any phone's viewport
+   width with no way to shrink; letting every cell wrap (the default) is
+   what actually lets the table fit at 100% width down to phone sizes. */
 .compareTable {
   width: 100%;
-  min-width: 420px;
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.9375rem;
 }
 
 .compareColLabel {
-  width: 42%;
+  width: 38%;
 }
 
 .compareTable th,
@@ -268,6 +271,7 @@
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--panel-border);
   text-align: left;
+  overflow-wrap: break-word;
 }
 
 /* Deliberately dark regardless of light/dark mode — same "always-dark"
@@ -287,7 +291,17 @@
 .compareTable tbody th {
   font-weight: 500;
   color: var(--fg-muted);
-  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .compareTable {
+    font-size: 0.8125rem;
+  }
+
+  .compareTable th,
+  .compareTable td {
+    padding: 0.5rem 0.5rem;
+  }
 }
 
 .compareYes {
@@ -503,10 +517,30 @@
   scroll-margin-top: 2rem;
 }
 
+/* 0.75rem (not the 0.25rem this used when it was a single paragraph) —
+   now that this is four separate paragraphs, they read as one dense block
+   without real spacing between them. */
 .promptCaption {
   color: var(--fg-muted);
   font-size: 0.9375rem;
-  margin: 0.25rem 0 0;
+  margin: 0.75rem 0 0;
+}
+
+.promptCaption:first-of-type {
+  margin-top: 0.25rem;
+}
+
+/* The global `a` reset (color: inherit, no underline) leaves an inline
+   text link invisible against .promptCaption's muted gray — needs its own
+   color + underline to read as clickable. */
+.inlineLink {
+  color: var(--success-fg);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+}
+
+.inlineLink:hover {
+  text-decoration-color: transparent;
 }
 
 /* Copy prompt sits up here next to the toggle (not down by Show full
@@ -745,9 +779,14 @@
   opacity: 0.6;
 }
 
+/* Title (icon inline, not its own column) + body, stacked — the earlier
+   version gave the icon its own flex column sized to the tallest sibling,
+   which read as the icon "taking up" a tall empty strip next to a short
+   line of text. Icon now sits inline as part of the title's own text. */
 .calloutNote {
   display: flex;
-  gap: 0.625rem;
+  flex-direction: column;
+  gap: 0.375rem;
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
   /* --info-bg/--info-fg are a dedicated pair (see globals.css), same
@@ -758,20 +797,21 @@
   border: 1px solid var(--info-fg);
 }
 
-.calloutNote span {
-  flex-shrink: 0;
-  font-size: 1rem;
-  line-height: 1.5;
+.calloutTitle {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--info-fg);
 }
 
-.calloutNote p {
+.calloutBody {
   margin: 0;
   font-size: 0.875rem;
   color: var(--info-fg);
 }
 
 .calloutNote .bulletList {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .calloutNote .bulletList li {
