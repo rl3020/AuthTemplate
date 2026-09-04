@@ -350,6 +350,15 @@ const forkTracks: Track[] = [
           linkLabel: "Supabase SMTP docs",
         },
       },
+      {
+        title: "Email confirmation is optional too",
+        description:
+          "SMTP being set up doesn't turn this on by itself — enable_confirmations stays false in supabase/config.toml's [auth.email] block until you flip it. Worth enabling now that delivery actually works: it verifies someone owns the email before their account is fully usable, and the click-gated /auth/confirm page plus your custom template only actually close the mail-scanner vulnerability once real delivery exists — leaving it off doesn't add safety, it just skips verification.",
+        bullets: [
+          "Set enable_confirmations = true, commit, push — applies to local dev too, there's no per-environment override for it like site_url has",
+          "Leave it false if you'd rather not require verification at all — sign-up already works fine either way, this is a judgment call, not a requirement",
+        ],
+      },
     ],
   },
 ];
