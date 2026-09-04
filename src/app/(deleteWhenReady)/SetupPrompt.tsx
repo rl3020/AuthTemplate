@@ -36,8 +36,10 @@ Manual: tell me to create one at https://supabase.com/dashboard/account/tokens, 
 ## 5. Add the GitHub repository secrets
 Three are needed: SUPABASE_ACCESS_TOKEN (from step 4), SUPABASE_PROJECT_REF (from step 3), and SUPABASE_DB_PASSWORD (from step 3). If the \`gh\` CLI is installed and authenticated against my repo, run \`gh secret set SUPABASE_ACCESS_TOKEN --repo <owner>/<repo>\` for each one — it prompts for the value directly in the terminal. If \`gh\` isn't available, tell me to add them manually at my repo → Settings → Secrets and variables → Actions → New repository secret, and wait for me to confirm.
 
-## 6. First migration
-supabase/migrations/ already has one (the profiles table) — nothing to create. It applies automatically the first time the "Deploy Supabase Migrations" GitHub Actions workflow runs after step 5. Tell me to trigger it: repo's Actions tab → "Deploy Supabase Migrations" → "Run workflow" button (it has a manual trigger built in, no new commit needed). This workflow only handles migrations — auth/email config is a separate "Deploy Supabase Config" workflow, covered in the Production path below.
+## 6. First migrations
+supabase/migrations/ already has two — nothing to create. One creates the profiles table with RLS policies; the other grants the authenticated role actual table-level access to it (RLS alone doesn't grant that — without it, every fresh hosted project hits "permission denied for table profiles" the moment anything touches it, even though local dev looks completely fine, since supabase start/db reset bootstraps default grants locally that a hosted project doesn't get). Both apply automatically the first time the "Deploy Supabase Migrations" GitHub Actions workflow runs after step 5. Tell me to trigger it: repo's Actions tab → "Deploy Supabase Migrations" → "Run workflow" button (it has a manual trigger built in, no new commit needed). This workflow only handles migrations — auth/email config is a separate "Deploy Supabase Config" workflow, covered in the Production path below.
+
+If I ever ask you to add a new table later: enable RLS, add policies, *and* explicitly grant select/insert/update/delete on it to authenticated in the same migration — db reset won't catch a missing grant, only a real deploy will, so this is easy to miss.
 
 ## 7. Deploy to Vercel
 Prefer the Vercel CLI so this stays scriptable:
@@ -81,6 +83,7 @@ This keeps local dev's site_url as localhost while production gets its own overr
 4. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/config.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 3.
 5. Tell me to check the Actions tab for "Deploy Supabase Config" (or trigger "Run workflow" on it) — the "Push config" step should now succeed (not skip) and push the custom email templates.
 6. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
+7. Mention that this also makes email confirmation available if I want it — it's a separate opt-in, enable_confirmations stays false in supabase/config.toml's [auth.email] block regardless of SMTP being set up, on purpose. Ask if I want it on; if yes, flip it to true, commit, and push (this applies to both local and production, there's no per-environment override for it the way there is for site_url). Leave it off if I don't say otherwise — sign-up already works fine without it.
 `;
 
 const PROMPT_CLEANUP = `
