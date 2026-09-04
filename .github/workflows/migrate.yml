@@ -22,7 +22,7 @@ jobs:
     # dashboard setting someone has to remember to click through — same
     # reasoning as supabase/config.toml's additional_redirect_urls.
     env:
-      SMTP_CONFIGURED: "false"
+      SMTP_CONFIGURED: "true"
 
     steps:
       - uses: actions/checkout@v4
