@@ -37,7 +37,7 @@ Manual: tell me to create one at https://supabase.com/dashboard/account/tokens, 
 Three are needed: SUPABASE_ACCESS_TOKEN (from step 4), SUPABASE_PROJECT_REF (from step 3), and SUPABASE_DB_PASSWORD (from step 3). If the \`gh\` CLI is installed and authenticated against my repo, run \`gh secret set SUPABASE_ACCESS_TOKEN --repo <owner>/<repo>\` for each one — it prompts for the value directly in the terminal. If \`gh\` isn't available, tell me to add them manually at my repo → Settings → Secrets and variables → Actions → New repository secret, and wait for me to confirm.
 
 ## 6. First migration
-supabase/migrations/ already has one (the profiles table) — nothing to create. It applies automatically the first time the GitHub Actions workflow runs after step 5. Tell me to trigger it: repo's Actions tab → "Deploy Supabase Migrations" → "Run workflow" button (it has a manual trigger built in, no new commit needed) — the config-push step will show as skipped by design (not a failure) unless I've gone with the Production path below; the migration itself lands regardless.
+supabase/migrations/ already has one (the profiles table) — nothing to create. It applies automatically the first time the "Deploy Supabase Migrations" GitHub Actions workflow runs after step 5. Tell me to trigger it: repo's Actions tab → "Deploy Supabase Migrations" → "Run workflow" button (it has a manual trigger built in, no new commit needed). This workflow only handles migrations — auth/email config is a separate "Deploy Supabase Config" workflow, covered in the Production path below.
 
 ## 7. Deploy to Vercel
 Prefer the Vercel CLI so this stays scriptable:
@@ -50,7 +50,7 @@ Prefer the Vercel CLI so this stays scriptable:
 `;
 
 const PROMPT_STEP_8_FREE = `## 8. You're done — nothing else to set up
-SMTP_CONFIGURED already ships "false" at the top of .github/workflows/migrate.yml, and that's correct as-is — don't change it. Confirm with me that:
+SMTP_CONFIGURED already ships "false" at the top of .github/workflows/config.yml, and that's correct as-is — don't change it. Confirm with me that:
 - Sign-up, login, sessions, protected routes, and the settings page all work end to end.
 - Forgot/reset password does *not* work yet — that's expected on this path, not a bug. It only needs Supabase's free tier and no domain purchase, which is the whole point of this path.
 
@@ -78,8 +78,8 @@ site_url = "<my production URL>"
 additional_redirect_urls = ["<my production URL>", "<my production URL>/auth/confirm"]
 \`\`\`
 This keeps local dev's site_url as localhost while production gets its own override — supabase config push merges it automatically when pushing to that project ref, no manual toggling.
-4. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/migrate.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 3.
-5. Tell me to check the Actions tab (or trigger "Run workflow" again) — the "Push config" step should now succeed (not skip) and push the custom email templates.
+4. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/config.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 3.
+5. Tell me to check the Actions tab for "Deploy Supabase Config" (or trigger "Run workflow" on it) — the "Push config" step should now succeed (not skip) and push the custom email templates.
 6. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
 `;
 

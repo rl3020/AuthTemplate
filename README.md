@@ -56,7 +56,7 @@ The home page (`src/app/(deleteWhenReady)/page.tsx`) and everything else in that
 | **Docker**                   | any recent                        | Must be _running_ — Supabase's local stack is containerized             |
 | **Supabase account**         | Free tier works, with one caveat below | For your hosted project — [Create a Supabase project](#create-a-supabase-project) |
 | **Vercel account**           | Free (Hobby) tier works           | Or any host that runs Next.js — see [Deploy to Vercel](#deploy-to-vercel) |
-| **GitHub repo**               | —                                  | The migration/config workflow ([.github/workflows/migrate.yml](.github/workflows/migrate.yml)) needs repository secrets — see [Wire up GitHub Actions](#wire-up-github-actions) |
+| **GitHub repo**               | —                                  | The migrations and config workflows ([.github/workflows/migrate.yml](.github/workflows/migrate.yml), [config.yml](.github/workflows/config.yml)) need repository secrets — see [Wire up GitHub Actions](#wire-up-github-actions) |
 | **Custom SMTP provider**     | Only if you need forgot/reset password to work | See caveat below — everything else runs with zero email setup |
 | **A domain you own**         | Only alongside SMTP               | SMTP providers only deliver to arbitrary recipients from a domain you've verified via DNS — their sandbox sender (e.g. Resend's `onboarding@resend.dev`) only sends to your own signup email, not real users |
 
@@ -69,7 +69,7 @@ The home page (`src/app/(deleteWhenReady)/page.tsx`) and everything else in that
 > projects using the default email provider. Please upgrade your plan or configure a custom SMTP provider."}
 > ```
 >
-> The CI workflow ([.github/workflows/migrate.yml](.github/workflows/migrate.yml)) skips the template push by default via an `SMTP_CONFIGURED: "false"` flag committed at the top of that file — migrations still deploy either way, so this never blocks shipping. It does mean **forgot/reset password stays broken in production until you flip it on**: upgrade to Supabase Pro, or configure a custom SMTP provider (Resend's free tier — 3,000 emails/month — works fine and unblocks the push). The SMTP route also means owning a domain — providers only deliver to arbitrary recipients from a domain you've verified via DNS records. Set up SMTP under **Authentication → Emails → SMTP Settings**, then edit `SMTP_CONFIGURED` to `"true"` in `migrate.yml`, commit, and re-run the workflow — see [Configure a real SMTP provider before you launch](#deploy-to-vercel).
+> The config workflow ([.github/workflows/config.yml](.github/workflows/config.yml)) skips the template push by default via an `SMTP_CONFIGURED: "false"` flag committed at the top of that file — migrations (a separate workflow, [migrate.yml](.github/workflows/migrate.yml)) deploy independently either way, so this never blocks shipping. It does mean **forgot/reset password stays broken in production until you flip it on**: upgrade to Supabase Pro, or configure a custom SMTP provider (Resend's free tier — 3,000 emails/month — works fine and unblocks the push). The SMTP route also means owning a domain — providers only deliver to arbitrary recipients from a domain you've verified via DNS records. Set up SMTP under **Authentication → Emails → SMTP Settings**, then edit `SMTP_CONFIGURED` to `"true"` in `config.yml`, commit, and re-run that workflow — see [Configure a real SMTP provider before you launch](#deploy-to-vercel).
 
 The Supabase CLI is a `devDependency` in [package.json](package.json), not a global install — `npm install` pulls a version pinned to this repo, and every command runs through `npx supabase ...` so you never need Homebrew, Scoop, or a standalone binary.
 
@@ -327,14 +327,16 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = <your production publishable key>
 
 `NEXT_PUBLIC_SITE_URL` is optional here — see [What happens on sign-up](#what-happens-on-sign-up) above. Only set it if you're using a custom domain or deploying somewhere other than Vercel.
 
-### Migration CI
+### Deploy CI
 
-[.github/workflows/migrate.yml](.github/workflows/migrate.yml) runs on every push to `main` that touches `supabase/migrations/**`, `supabase/config.toml`, or `supabase/templates/**`, and does two things in order:
+Two independent workflows, so migrations and config each get their own status check and can be re-run separately:
 
-1. `supabase db push` — applies pending migrations.
-2. `supabase config push` — syncs auth settings and the confirmation/recovery email templates in `supabase/config.toml`, including `additional_redirect_urls`.
+| Workflow | Triggers on | Does |
+| --- | --- | --- |
+| [.github/workflows/migrate.yml](.github/workflows/migrate.yml) — "Deploy Supabase Migrations" | `supabase/migrations/**` | `supabase db push` — applies pending migrations |
+| [.github/workflows/config.yml](.github/workflows/config.yml) — "Deploy Supabase Config" | `supabase/config.toml`, `supabase/templates/**` | `supabase config push` — syncs auth settings and the confirmation/recovery email templates, including `additional_redirect_urls` |
 
-It needs three repository secrets:
+Both need the same three repository secrets:
 
 | Secret                  | Where to find it                         |
 | ----------------------- | ---------------------------------------- |
@@ -342,9 +344,9 @@ It needs three repository secrets:
 | `SUPABASE_PROJECT_REF`  | supabase.com/dashboard/project/**[ref]** |
 | `SUPABASE_DB_PASSWORD`  | Dashboard → Project Settings → Database  |
 
-Until those secrets are set the workflow fails harmlessly — it has no project to connect to.
+Until those secrets are set, both workflows fail harmlessly — they have no project to connect to.
 
-**Step 2 only runs once you've set up custom SMTP.** It's gated behind an `SMTP_CONFIGURED: "false"` flag committed at the top of `migrate.yml` — free-tier Supabase rejects `config push`'s email template changes outright (`Email template modification is not available for free tier projects using the default email provider`), so rather than let that fail the whole job on every push, step 2 is cleanly *skipped* (a warning, not a failure) until you flip the flag to `"true"`. Step 1 always runs regardless — migrations aren't gated. See the [Prerequisites](#0-prerequisites) caveat and [What happens on sign-up](#what-happens-on-sign-up) above for the full SMTP setup (Resend, port gotchas, `site_url`, testing). Once SMTP is configured and the flag is flipped, trigger it via the repo's Actions tab → "Deploy Supabase Migrations" → **Run workflow** (a manual `workflow_dispatch` trigger, no new commit needed).
+**The config workflow only actually pushes once you've set up custom SMTP.** It's gated behind an `SMTP_CONFIGURED: "false"` flag committed at the top of `config.yml` — free-tier Supabase rejects `config push`'s email template changes outright (`Email template modification is not available for free tier projects using the default email provider`), so rather than let that fail the job on every push, the push step is cleanly *skipped* (a warning, not a failure) until you flip the flag to `"true"`. The migrations workflow is entirely separate and always runs regardless — it isn't gated by this at all. See the [Prerequisites](#0-prerequisites) caveat and [What happens on sign-up](#what-happens-on-sign-up) above for the full SMTP setup (Resend, port gotchas, `site_url`, testing). Once SMTP is configured and the flag is flipped, trigger it via the repo's Actions tab → "Deploy Supabase Config" → **Run workflow** (a manual `workflow_dispatch` trigger, no new commit needed).
 
 ---
 
@@ -424,5 +426,6 @@ supabase/
 └── migrations/
     └── 20260830005405_init.sql # profiles table, RLS policies, auto-create trigger
 .github/workflows/
-└── migrate.yml                 # Pushes migrations + config to production on push to main
+├── migrate.yml                 # Pushes supabase/migrations/** to production
+└── config.yml                  # Pushes supabase/config.toml + templates/** to production (gated by SMTP_CONFIGURED)
 ```

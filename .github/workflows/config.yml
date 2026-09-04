@@ -1,0 +1,55 @@
+name: Deploy Supabase Config
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/config.toml"
+      - "supabase/templates/**"
+  # Lets you manually re-run this against the current main branch from the
+  # Actions tab (Run workflow button) without needing a new commit — handy
+  # for testing after flipping SMTP_CONFIGURED or fixing a secret.
+  workflow_dispatch:
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    # Flip to "true" once SMTP is set up under Authentication → Emails →
+    # SMTP Settings — see README Prerequisites for why this exists. Lives
+    # here (committed) rather than as a GitHub repo variable so it's not a
+    # dashboard setting someone has to remember to click through — same
+    # reasoning as supabase/config.toml's additional_redirect_urls.
+    env:
+      SMTP_CONFIGURED: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Free-tier Supabase projects reject custom email template pushes
+      # outright (see README Prerequisites) unless SMTP is configured, so
+      # this step is opt-in via the SMTP_CONFIGURED flag above rather than
+      # always attempted-and-caught: catching Supabase's error text by
+      # string match would silently break the moment they reword it, and
+      # would just as silently swallow a *real* config error too. Until the
+      # flag is flipped, this step is skipped, and forgot/reset password
+      # just isn't wired up yet.
+      - name: Push config (auth settings, email templates) to production
+        if: env.SMTP_CONFIGURED == 'true'
+        run: supabase config push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Skip email template push (SMTP not configured)
+        if: env.SMTP_CONFIGURED != 'true'
+        run: echo "::warning::Skipping email template push — SMTP_CONFIGURED is 'false' at the top of this workflow file. Forgot/reset password won't work until it's flipped to 'true'. See README Prerequisites."

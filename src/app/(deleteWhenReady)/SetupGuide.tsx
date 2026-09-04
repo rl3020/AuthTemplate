@@ -327,8 +327,8 @@ const forkTracks: Track[] = [
           value: "false",
           body: "Skipped by default — migrations still deploy either way. To enable:",
           bullets: [
-            'Set SMTP_CONFIGURED to "true" in .github/workflows/migrate.yml, commit, push',
-            'Actions tab → "Deploy Supabase Migrations" → "Run workflow" — config push should now succeed (not skip) and deploy your custom templates',
+            'Set SMTP_CONFIGURED to "true" in .github/workflows/config.yml, commit, push',
+            'Actions tab → "Deploy Supabase Config" → "Run workflow" — config push should now succeed (not skip) and deploy your custom templates',
             "Test against your deployed URL, not localhost — request a password reset for an email that's actually registered on the hosted project (Authentication → Users)",
             "The UI always shows \"check your email\" whether or not an account exists — that's deliberate, to stop attackers probing which emails are registered. If nothing arrives, check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells you which side the problem is on",
           ],
