@@ -5,9 +5,11 @@
 import { useState } from "react";
 import styles from "@/app/(deleteWhenReady)/page.module.css";
 
-// Shared by both prompt variants — everything up through connecting the
-// deployed URL back to Supabase is identical regardless of which path
-// someone picks; the paths only diverge at what's step 9 below.
+// Shared by both prompt variants — everything through deploying to Vercel
+// is identical regardless of which path someone picks. Connecting the
+// deployed URL back to Supabase only matters for the Production path (it's
+// about email links, and Free never sends email), so that step lives in
+// the Production branch below, not here.
 const PROMPT_TRUNK = `You're helping me take my copy of the AuthTemplate repo (Next.js + Supabase auth starter) from a fresh clone to a deployed app. Work through these in order, and check in with me at each numbered section before moving to the next.
 
 Rule for the whole thing: never ask me to paste an API key, access token, or password directly into this chat. When a step needs a real secret, either have me paste it straight into a dashboard myself, or run the tool's own secure prompt (\`gh secret set\`, \`vercel env add\`, etc.) — those ask for the value directly in the terminal, hidden, without it ever passing through you.
@@ -24,18 +26,18 @@ Check whether the current directory is already this repo (look for "auth-templat
 
 ## 3. Create a hosted Supabase project
 This part is manual on my end — walk me through it, don't try to do it yourself:
-- Tell me to create a project at https://supabase.com/dashboard.
-- Ask me for the Project URL and Publishable key (Project Settings → API) once it exists — those aren't secret, safe to paste here.
-- Tell me to note the database password (Project Settings → Database) but hold onto it myself for step 5 — don't have me paste it here.
+- Tell me to go to https://supabase.com/dashboard, click "New project", pick an org/region, and set a database password when prompted — tell me to write that password down myself, Supabase won't show it again, and not to paste it here.
+- Ask me for the Project URL and Publishable key (Project Settings → API) once it finishes provisioning — those aren't secret, safe to paste here.
+- Ask me for the project ref too (the string in the dashboard URL, supabase.com/dashboard/project/<ref>, also under Project Settings → General) — I'll reuse this in steps 5 and (if I go with Production) later. Not secret, safe to paste here.
 
 ## 4. Generate a Supabase access token
 Manual: tell me to create one at https://supabase.com/dashboard/account/tokens, scoped to this project. This is a real secret — tell me to hold onto it for step 5, not paste it here.
 
 ## 5. Add the GitHub repository secrets
-Three are needed: SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF (from the project's dashboard URL), and SUPABASE_DB_PASSWORD. If the \`gh\` CLI is installed and authenticated against my repo, run \`gh secret set SUPABASE_ACCESS_TOKEN --repo <owner>/<repo>\` for each one — it prompts for the value directly in the terminal. If \`gh\` isn't available, tell me to add them manually at my repo → Settings → Secrets and variables → Actions, and wait for me to confirm.
+Three are needed: SUPABASE_ACCESS_TOKEN (from step 4), SUPABASE_PROJECT_REF (from step 3), and SUPABASE_DB_PASSWORD (from step 3). If the \`gh\` CLI is installed and authenticated against my repo, run \`gh secret set SUPABASE_ACCESS_TOKEN --repo <owner>/<repo>\` for each one — it prompts for the value directly in the terminal. If \`gh\` isn't available, tell me to add them manually at my repo → Settings → Secrets and variables → Actions → New repository secret, and wait for me to confirm.
 
 ## 6. First migration
-supabase/migrations/ already has one (the profiles table) — nothing to create. It applies automatically the first time the GitHub Actions workflow runs after step 5. Tell me to check my repo's Actions tab; the config-push step is skipped by design (not a failure) unless I've gone with the Production path below — the migration itself lands regardless.
+supabase/migrations/ already has one (the profiles table) — nothing to create. It applies automatically the first time the GitHub Actions workflow runs after step 5. Tell me to trigger it: repo's Actions tab → "Deploy Supabase Migrations" → "Run workflow" button (it has a manual trigger built in, no new commit needed) — the config-push step will show as skipped by design (not a failure) unless I've gone with the Production path below; the migration itself lands regardless.
 
 ## 7. Deploy to Vercel
 Prefer the Vercel CLI so this stays scriptable:
@@ -43,37 +45,52 @@ Prefer the Vercel CLI so this stays scriptable:
 2. \`npx vercel link\` to connect this project (create a new Vercel project if prompted).
 3. \`npx vercel env add NEXT_PUBLIC_SUPABASE_URL production\` and the same for NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY — each prompts for the value in the terminal; use the hosted values from step 3. Don't bother with NEXT_PUBLIC_SITE_URL — src/lib/site.ts already falls back to Vercel's own VERCEL_PROJECT_PRODUCTION_URL/VERCEL_URL when it's unset, so it's only needed if I'm using a custom domain.
 4. \`npx vercel --prod\` to deploy.
-
-## 8. Connect the deployed URL back to Supabase
-Don't just add it in the Supabase dashboard — that alone doesn't stick. supabase/config.toml's additional_redirect_urls is what actually controls this on the hosted project, and the GitHub Actions workflow runs \`supabase config push\` on every migration push, which overwrites the dashboard's redirect URLs back to whatever's in that file. So: add my production URL (and its /auth/confirm path) to additional_redirect_urls in supabase/config.toml, then commit and push — that's what makes it stick, not the dashboard edit.
+5. Ask if I want a custom domain instead of the default *.vercel.app one — optional, skip if not. If yes: manual on my end, tell me to add it under the Vercel project → Settings → Domains, add the DNS records Vercel shows at my registrar, and wait for it to verify. Once it's set as the Production domain, VERCEL_PROJECT_PRODUCTION_URL picks it up automatically — no code change needed.
 
 `;
 
-const PROMPT_STEP_9_FREE = `## 9. You're done — nothing else to set up
+const PROMPT_STEP_8_FREE = `## 8. You're done — nothing else to set up
 SMTP_CONFIGURED already ships "false" at the top of .github/workflows/migrate.yml, and that's correct as-is — don't change it. Confirm with me that:
-- The email-template config-push step in Actions shows as skipped (not failed) — that's by design.
 - Sign-up, login, sessions, protected routes, and the settings page all work end to end.
 - Forgot/reset password does *not* work yet — that's expected on this path, not a bug. It only needs Supabase's free tier and no domain purchase, which is the whole point of this path.
+
+There's nothing to touch in supabase/config.toml on this path either — site_url and the redirect-URL list only matter for email flows (confirmation/recovery), and this path doesn't send any, so the localhost defaults there are harmless.
 
 Tell me this is revisitable any time — if I ever want working forgot/reset password, the fix is running through the Production version of this prompt, not redoing anything above.
 `;
 
-const PROMPT_STEP_9_PRODUCTION = `## 9. Add a real SMTP provider (required for working forgot/reset password)
-1. Manual, walk me through it: create an account with a custom SMTP provider (Resend's free tier is 3,000 emails/month) and verify a domain there via DNS records. Note this can be a different domain than wherever the app itself is hosted — the SMTP-verified domain only controls the "from" address, not the app's URL.
-2. Tell me to point Supabase at it: Authentication → Emails → SMTP Settings, then Authentication → Rate Limits to raise the limit off Supabase's shared-mailer default.
-3. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/migrate.yml — this is the only code change this step needs, and it's what flips the config-push step in migrate.yml from skipped to active. Commit and push it.
-4. Tell me to check the Actions tab — the "Push config" step should now succeed (not skip) and push the custom email templates.
-5. Have me actually request a password reset on the deployed app and confirm the email arrives before calling this done — don't just trust the workflow going green.
+const PROMPT_STEP_8_PRODUCTION = `## 8. Add a real SMTP provider (required for working forgot/reset password)
+This is manual on my end for the dashboard/DNS parts — walk me through it, don't try to do it yourself:
+1. Resend: tell me to create an account at resend.com, go to Domains → Add Domain, and add the TXT/CNAME records it shows me at wherever I bought the domain (GoDaddy, Namecheap, Cloudflare, etc.), under DNS management. This can be a different domain than wherever the app itself is hosted. Tell me to wait until Resend shows the domain as "Verified" before continuing — sending fails until it does, and it can take a few minutes to longer while DNS propagates. Then tell me to go to API Keys → Create API Key — that's a secret, hold onto it, don't paste it here.
+2. Tell me to point Supabase at it: Authentication → Emails → SMTP Settings, enable custom SMTP, and fill in:
+   - Host: smtp.resend.com — Port: 587 (not 465 — Supabase's mailer can hang and time out connecting on 465 with Resend; 587 is the one that actually works, this cost real debugging time)
+   - Username: resend (literally that word) — Password: the API key from step 1
+   - Sender email: any address on the verified domain, e.g. noreply@mydomain.com — doesn't need to be a real inbox, it's just the From address
+   - Sender name: any display name — both this and Sender email are required, the form won't save without them
+   Then Authentication → Rate Limits → raise the email limit off Supabase's shared-mailer default.
+3. Connect the deployed URL back to Supabase in code, not just the dashboard — the dashboard field gets silently overwritten back to localhost the next time config push runs, and it's not just about redirects: site_url is the literal value Supabase substitutes into the confirmation/recovery email templates, so getting this wrong means production emails link to localhost even though everything else works. At the bottom of supabase/config.toml, add:
+\`\`\`
+[remotes.production]
+project_id = "<my project ref, from step 3 above — not a secret>"
+
+[remotes.production.auth]
+site_url = "<my production URL>"
+additional_redirect_urls = ["<my production URL>", "<my production URL>/auth/confirm"]
+\`\`\`
+This keeps local dev's site_url as localhost while production gets its own override — supabase config push merges it automatically when pushing to that project ref, no manual toggling.
+4. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/migrate.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 3.
+5. Tell me to check the Actions tab (or trigger "Run workflow" again) — the "Push config" step should now succeed (not skip) and push the custom email templates.
+6. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
 `;
 
 const PROMPT_CLEANUP = `
-## 10. Clean up
+## 9. Clean up
 Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. Then update the title and description in src/app/layout.tsx's metadata to match my real project name.
 
 Throughout: ask before anything destructive, and stop and tell me plainly if a command fails instead of guessing around it.`;
 
-const PROMPT_TEXT_FREE = PROMPT_TRUNK + PROMPT_STEP_9_FREE + PROMPT_CLEANUP;
-const PROMPT_TEXT_PRODUCTION = PROMPT_TRUNK + PROMPT_STEP_9_PRODUCTION + PROMPT_CLEANUP;
+const PROMPT_TEXT_FREE = PROMPT_TRUNK + PROMPT_STEP_8_FREE + PROMPT_CLEANUP;
+const PROMPT_TEXT_PRODUCTION = PROMPT_TRUNK + PROMPT_STEP_8_PRODUCTION + PROMPT_CLEANUP;
 
 type Version = "free" | "production";
 
@@ -117,8 +134,8 @@ export function SetupPrompt() {
         when creating a Supabase project or handling secrets.
       </p>
       <p className={styles.promptCaption}>
-        Both prompts are identical through step 8 — they only diverge at
-        step 9. <strong>Free</strong> skips email setup entirely
+        Both prompts are identical through step 7 — they only diverge at
+        step 8. <strong>Free</strong> skips email setup entirely
         (forgot/reset password won&apos;t work); <strong>Production</strong>{" "}
         adds SMTP so it does. Switch anytime by running the other prompt.
       </p>

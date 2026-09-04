@@ -150,11 +150,10 @@ enabled = true
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 # IMPORTANT: `supabase config push` (run by .github/workflows/migrate.yml on every push
-# to main that touches supabase/) overwrites this entire list on your hosted project.
-# Adding your production URL only through the Supabase dashboard works until the next
-# migration push, which silently resets it back to whatever's here — so add it here
-# too, e.g. "https://your-app.vercel.app", "https://your-app.vercel.app/auth/confirm",
-# then commit and push so it actually stays in sync.
+# to main that touches supabase/) overwrites this entire list on your hosted project —
+# unless a [remotes.<name>] override below applies (see the bottom of this file), which
+# is what actually keeps production on its own site_url/redirect list instead of sharing
+# this local one.
 additional_redirect_urls = ["http://localhost:3000", "http://localhost:3000/auth/confirm", "http://127.0.0.1:3000"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -403,3 +402,16 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+# Per-environment overrides — everything above this point is local dev's
+# config (used by `supabase start`) and also the fallback for any remote
+# `supabase config push` that doesn't match a [remotes.<name>] block below.
+# A remote whose project_id matches gets these specific keys merged on top
+# instead, so production can have its own site_url/redirect list without
+# sharing (or fighting over) the localhost ones local dev needs.
+[remotes.production]
+project_id = "vnhblbyydefrgsjsqiwm"
+
+[remotes.production.auth]
+site_url = "https://auth-template.com"
+additional_redirect_urls = ["https://auth-template.com", "https://auth-template.com/auth/confirm"]

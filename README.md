@@ -190,9 +190,30 @@ function MyLoginForm() {
 
 The confirmation link is built from `NEXT_PUBLIC_SITE_URL` if set (see `.env.example`), otherwise it falls back to Vercel's own `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL` — see [src/lib/site.ts](src/lib/site.ts). You only need to set it yourself for a custom domain or a non-Vercel host.
 
-**Don't just add your production URL in the Supabase dashboard.** `supabase/config.toml`'s `additional_redirect_urls` is what actually stays in sync — the migration workflow runs `supabase config push` on every push to `main` that touches `supabase/`, which overwrites the dashboard's redirect URLs back to whatever's in that file. Add your production URL (and its `/auth/confirm` path) to `additional_redirect_urls` in `supabase/config.toml`, then commit and push, or the confirmation link will start getting rejected again the next time any migration ships.
+**Don't just add your production URL in the Supabase dashboard.** `supabase/config.toml` is what actually stays in sync — the migration workflow runs `supabase config push` on every push to `main` that touches `supabase/`, which overwrites the dashboard's `site_url`/redirect URLs back to whatever's in that file. Editing the dashboard directly works until the next migration push silently resets it.
 
-**Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. It also flatly refuses to push custom email templates on the free tier — see the [Prerequisites](#0-prerequisites) caveat, since that's exactly what breaks this template's confirmation-link fix. Fix both under **Authentication → Emails → SMTP Settings** with your own provider (Resend, SendGrid, Postmark), then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
+`site_url` matters more than it looks — it's not just a redirect allow-list entry, it's the literal value Supabase substitutes into `{{ .SiteURL }}` in the email templates (`supabase/templates/confirmation.html`/`recovery.html`). Leave it as `http://localhost:3000` in the base `[auth]` block (that's what local dev needs), and instead add a **`[remotes.<name>]` override** at the bottom of `config.toml` — this is what actually gets your production emails linking to your real domain instead of `localhost`:
+
+```toml
+[remotes.production]
+project_id = "your-project-ref"   # from your Supabase project's dashboard URL — not a secret
+
+[remotes.production.auth]
+site_url = "https://your-app.com"
+additional_redirect_urls = ["https://your-app.com", "https://your-app.com/auth/confirm"]
+```
+
+`supabase config push` merges the matching `[remotes.<name>]` block on top of the base config only when pushing to that project ref — so local dev and production each get the right `site_url` automatically, no manual toggling. **You'll need to replace `project_id` and the URLs above with your own** — this template ships with its own author's values, which won't match your project. A project ref isn't sensitive (it's already public in your `NEXT_PUBLIC_SUPABASE_URL`), so it's fine to commit.
+
+**Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. It also flatly refuses to push custom email templates on the free tier — see the [Prerequisites](#0-prerequisites) caveat, since that's exactly what breaks this template's confirmation-link fix. Fix both under **Authentication → Emails → SMTP Settings** with your own provider, then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
+
+Setting up Resend specifically, end to end:
+1. Create an account, then **Domains → Add Domain**. This can be a different domain than wherever the app is hosted.
+2. Add the TXT/CNAME records Resend shows you at your domain registrar's DNS settings (GoDaddy, Namecheap, Cloudflare, etc.), then wait for Resend to show the domain as **Verified** — usually minutes, sometimes longer while DNS propagates. Sending fails until it flips.
+3. **API Keys → Create API Key** — that's your SMTP password.
+4. In Supabase's SMTP Settings: Host `smtp.resend.com`, **Port `587`** (not `465` — Supabase's mailer can hang and time out connecting to Resend on `465`; `587` is the one that actually works), Username `resend` (literally that word), Password the API key from step 3. Sender email is any address on your verified domain (e.g. `noreply@yourdomain.com`) — it doesn't need to be a real inbox, it's just the `From` header. Sender name is any display name. Both Sender email and Sender name are required — the form won't save without them.
+
+**Testing it:** always test against your deployed URL, not `localhost` — local dev talks to your local Supabase stack (Mailpit), which is unaffected by any of this. `requestPasswordReset` (and Supabase's `/recover` endpoint underneath it) always shows a "check your email" success response whether or not the account exists, by design, to stop attackers enumerating registered emails — so a successful-looking response doesn't confirm anything actually sent. Use an email that's genuinely registered on the hosted project (**Authentication → Users**), and if nothing arrives, check Resend's own dashboard (**Emails → Sending**) to see whether it even received a send request from Supabase — that tells you which side of the pipe the problem is on before you go looking further.
 
 ### What happens on forgot/reset password
 
@@ -323,7 +344,7 @@ It needs three repository secrets:
 
 Until those secrets are set the workflow fails harmlessly — it has no project to connect to.
 
-**Step 2 fails on the free tier until you configure custom SMTP** — Supabase rejects `config push`'s email template changes on its default mailer with `Email template modification is not available for free tier projects using the default email provider`. That's expected and doesn't affect step 1; your migrations still land even if the job ends red. Configure SMTP (see above), then re-run the workflow from the Actions tab.
+**Step 2 only runs once you've set up custom SMTP.** It's gated behind an `SMTP_CONFIGURED: "false"` flag committed at the top of `migrate.yml` — free-tier Supabase rejects `config push`'s email template changes outright (`Email template modification is not available for free tier projects using the default email provider`), so rather than let that fail the whole job on every push, step 2 is cleanly *skipped* (a warning, not a failure) until you flip the flag to `"true"`. Step 1 always runs regardless — migrations aren't gated. See the [Prerequisites](#0-prerequisites) caveat and [What happens on sign-up](#what-happens-on-sign-up) above for the full SMTP setup (Resend, port gotchas, `site_url`, testing). Once SMTP is configured and the flag is flipped, trigger it via the repo's Actions tab → "Deploy Supabase Migrations" → **Run workflow** (a manual `workflow_dispatch` trigger, no new commit needed).
 
 ---
 
@@ -340,9 +361,8 @@ src/
 │   │   ├── ThemeToggle.tsx        #   Dark mode toggle, shown on every page
 │   │   ├── ThemeToggle.module.css
 │   │   ├── AuthToggle.tsx         #   Sign in / sign up tab switcher on the home page
-│   │   ├── AuthToggle.module.css
 │   │   ├── InlineScript.tsx       #   Helper for the pre-hydration theme-init script
-│   │   └── app.module.css         #   Shared form/button/card styles (auth + settings)
+│   │   └── app.module.css         #   Shared form/button/card/tab styles (auth + settings + onboarding)
 │   ├── (deleteWhenReady)/         # Onboarding content only — delete this whole folder
 │   │   ├── page.tsx                #   Home page ("/") — replace with your actual app
 │   │   ├── WhatsIncluded.tsx       #   "What's included" section — Free vs. Production table
@@ -351,6 +371,8 @@ src/
 │   │   ├── FileTree.tsx            #   The clickable file-tree overview itself
 │   │   ├── SetupGuide.tsx          #   Step-by-step setup walkthrough
 │   │   ├── SetupPrompt.tsx         #   Copyable "set up with your AI assistant" prompt
+│   │   ├── TrackCard.tsx           #   Renders each Free/Production card in the guide's fork
+│   │   ├── TrackCard.module.css
 │   │   ├── CodePanel.tsx           #   Copyable terminal panel used by the guide/prompt
 │   │   ├── page.module.css
 │   │   └── dashboard/page.tsx      #   Example protected page → "/dashboard"

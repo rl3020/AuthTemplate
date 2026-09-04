@@ -22,10 +22,13 @@ export type Flag = {
 
 export type TrackStep = {
   title: string;
-  description: string;
+  description?: string;
+  bullets?: string[];
   note?: string;
   panelLabel?: string;
   commands?: string[];
+  href?: string;
+  linkLabel?: string;
   flag?: Flag;
 };
 
@@ -48,10 +51,23 @@ export function TrackCard({ track }: { track: Track }) {
         </span>
         <p className={styles.tagline}>{track.tagline}</p>
       </div>
-      {track.steps.map((step) => (
+      {track.steps.map((step, index) => (
         <div key={step.title} className={styles.step}>
-          <p className={styles.stepTitle}>{step.title}</p>
-          <p className={styles.stepBody}>{step.description}</p>
+          <p className={styles.stepTitle}>
+            {track.steps.length > 1 && (
+              <span className={styles.stepIndex}>{index + 1}</span>
+            )}
+            {step.title}
+          </p>
+          {step.description && <p className={styles.stepBody}>{step.description}</p>}
+
+          {step.bullets && (
+            <ul className={styles.stepBullets}>
+              {step.bullets.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
 
           {step.commands && step.commands.length > 0 && (
             <div className={styles.panelWrap}>
@@ -60,6 +76,18 @@ export function TrackCard({ track }: { track: Track }) {
           )}
 
           {step.note && <p className={styles.plainNote}>{step.note}</p>}
+
+          {step.href && (
+            <Link
+              className={styles.flagLink}
+              href={step.href}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {step.linkLabel ?? step.href}
+              <span aria-hidden="true">↗</span>
+            </Link>
+          )}
 
           {step.flag && (
             <div className={styles.flagNote}>
