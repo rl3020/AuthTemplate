@@ -14,6 +14,8 @@ const PROMPT_TRUNK = `You're helping me take my copy of the AuthTemplate repo (N
 
 Rule for the whole thing: never ask me to paste an API key, access token, or password directly into this chat. When a step needs a real secret, either have me paste it straight into a dashboard myself, or run the tool's own secure prompt (\`gh secret set\`, \`vercel env add\`, etc.) — those ask for the value directly in the terminal, hidden, without it ever passing through you.
 
+Before doing anything else, read SETUP_CHECKLIST.md at the repo root — it ships with every checkbox unchecked and mirrors every step below. If any boxes are already checked, resume from the first unchecked one instead of starting over or re-asking me things it already answered (check its Notes section too — that's where earlier facts like my project ref or deployed URL should already be). As you complete each item, check it off in that file (edit the checkbox, don't just tell me it's done) and add anything later steps will need to the Notes section. Commit that file's changes along with whatever else you're committing at each step, same as any other file — it's meant to be real project history, not scratch state.
+
 ## 1. Get the code
 Check whether the current directory is already this repo (look for "auth-template" in package.json, or check \`git remote -v\`). If not, ask me for the repo URL — the copy I created by clicking "Use this template" on https://github.com/rl3020/AuthTemplate, not the template itself — then clone it and cd in.
 
@@ -88,7 +90,7 @@ This keeps local dev's site_url as localhost while production gets its own overr
 
 const PROMPT_CLEANUP = `
 ## 9. Clean up
-Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. Then update the title and description in src/app/layout.tsx's metadata to match my real project name.
+Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. Then update the title and description in src/app/layout.tsx's metadata to match my real project name. Also delete SETUP_CHECKLIST.md — it was only ever meant to track this setup, not stick around afterward.
 
 Throughout: ask before anything destructive, and stop and tell me plainly if a command fails instead of guessing around it.`;
 

@@ -356,6 +356,8 @@ Until those secrets are set, both workflows fail harmlessly — they have no pro
 
 ## Project structure
 
+`SETUP_CHECKLIST.md` at the repo root isn't shown below — it ships unchecked, tracks the whole setup flow (same steps as the AI prompt on the home page), and is meant to be checked off and committed as you go, then deleted once you're done (see its own "Clean up" step).
+
 ```
 src/
 ├── app/
