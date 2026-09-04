@@ -77,17 +77,15 @@ const sections: Section[] = [
         commands: ["docker info"],
       },
       {
-        title: "What you'll need for production (not local dev)",
+        title: "What you'll need to deploy (not local dev)",
         description:
-          "Node and Docker above are all local dev needs. Going live also needs accounts with these — all have working free tiers:",
+          "Node and Docker above are all local dev needs. Deploying needs two accounts, both free — that's it, regardless of which path below you pick:",
         bullets: [
           "A Supabase account, for your hosted project",
           "A Vercel account (or any Next.js host)",
-          "A custom SMTP provider (e.g. Resend) — not optional, see the callout below",
-          "A domain you own — SMTP providers only deliver to arbitrary recipients from a domain you've verified via DNS",
         ],
-        noteTitle: "Why isn't SMTP optional?",
-        note: "Supabase's free tier flatly refuses to push custom email templates on its own built-in mailer, and this template's click-through confirmation fix needs its own custom template — so without your own SMTP provider, the production config push fails and you're stuck on Supabase's default template, reopening the mail-scanner vulnerability the fix exists to close. SMTP providers' sandbox senders (e.g. Resend's onboarding@resend.dev) also only deliver to your own signup email, so real users need a domain you've verified via DNS too.",
+        noteTitle: "SMTP and a domain — only if you want working password reset",
+        note: "Free and Production genuinely support different things, not \"same app, one path is just unfinished.\" Free deploys and runs for real with just the two accounts above — sign-up, login, sessions, settings all work. The only thing it can't do is forgot/reset password, since that's the one flow that can't skip email. If you want that working, that's when you need a custom SMTP provider (e.g. Resend) and a domain you own — see the fork at the bottom of this guide for exactly what that adds and why.",
       },
     ],
   },
