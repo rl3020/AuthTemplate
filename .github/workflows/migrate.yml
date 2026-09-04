@@ -8,6 +8,10 @@ on:
       - "supabase/migrations/**"
       - "supabase/config.toml"
       - "supabase/templates/**"
+  # Lets you manually re-run this against the current main branch from the
+  # Actions tab (Run workflow button) without needing a new commit — handy
+  # for testing after flipping SMTP_CONFIGURED or fixing a secret.
+  workflow_dispatch:
 
 jobs:
   migrate:
