@@ -185,11 +185,20 @@ const sections: Section[] = [
     steps: [
       {
         title:
-          "This template ships one migration — you don't need to create it",
+          "This template ships two migrations — you don't need to create them",
         description:
-          "It's what created the profiles table you saw in \"What's included\": Row Level Security enabled, policies so each user can only read/update their own row, and a trigger that auto-inserts a profile row the moment someone signs up.",
+          "The first created the profiles table you saw in \"What's included\": Row Level Security enabled, policies so each user can only read/update their own row, and a trigger that auto-inserts a profile row the moment someone signs up.",
         panelLabel: "supabase/migrations/20260830005405_init.sql",
         commands: initMigrationSql,
+      },
+      {
+        title: "The second grants access to that table",
+        description:
+          "RLS only filters rows once a role already has table-level privilege — it doesn't grant that privilege itself. Local dev's supabase start/db reset quietly bootstraps default grants for you (Supabase's local template does this for convenience), which is why this works without thinking about it locally. A hosted project doesn't get the same default grants for tables created by a migration (only ones created through Studio's Table Editor do) — without this second migration, every fresh hosted project hits \"permission denied for table profiles\" the first time anything touches it, even though local dev looks completely fine.",
+        panelLabel: "supabase/migrations/20260904034640_grant_profiles_access.sql",
+        commands: [
+          "grant select, insert, update, delete on public.profiles to authenticated;",
+        ],
       },
       {
         title: "It goes live the first time the workflow runs",
@@ -211,6 +220,11 @@ const sections: Section[] = [
           "git add supabase/migrations",
           'git commit -m "Add posts table"',
           "git push",
+        ],
+        noteTitle: "New table? Don't forget the grant.",
+        note: 'db reset above will look like it works — local dev\'s default grants mask this every time. Add an explicit grant to the same migration (or a follow-up one) for any new table, or it\'ll pass locally and then throw "permission denied" the moment it hits your hosted project.',
+        noteBullets: [
+          "grant select, insert, update, delete on public.posts to authenticated;",
         ],
       },
     ],

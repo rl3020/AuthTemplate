@@ -310,7 +310,9 @@ npx supabase migration new add_posts_table   # creates supabase/migrations/<time
 npx supabase db reset                        # rebuilds local DB from every migration, in order
 ```
 
-[supabase/migrations/20260830005405_init.sql](supabase/migrations/20260830005405_init.sql) is the one migration already here — it creates `profiles` with RLS and the auto-create trigger mentioned above. Use it as the pattern (enable RLS, add policies) for any table you add.
+Two migrations ship already: [20260830005405_init.sql](supabase/migrations/20260830005405_init.sql) creates `profiles` with RLS and the auto-create trigger mentioned above, and [20260904034640_grant_profiles_access.sql](supabase/migrations/20260904034640_grant_profiles_access.sql) grants `authenticated` actual table-level access to it.
+
+**That second one matters more than it looks.** RLS only filters *rows* once a role already has table-level privilege — it doesn't grant that privilege itself. `supabase start`/`db reset` locally bootstraps default grants for you as part of Supabase's local template, so this is easy to never think about. A hosted project doesn't get the same default grants for tables created by a migration (only ones created through Studio's Table Editor do), so without an explicit `grant`, every fresh hosted project would hit `permission denied for table profiles` the moment anything touches it — while local dev looks completely fine. **Use both files as the pattern for any table you add**: enable RLS, add policies, *and* grant `select`/`insert`/`update`/`delete` to `authenticated` explicitly — `db reset` won't catch a missing grant, only a real deploy will.
 
 ---
 
@@ -424,7 +426,8 @@ supabase/
 ├── config.toml                 # Local stack config (offset ports 54331–54337); auth settings + email templates pushed to production
 ├── templates/                  # confirmation.html, recovery.html — routed through /auth/confirm, not Supabase's default auto-verify-on-GET links
 └── migrations/
-    └── 20260830005405_init.sql # profiles table, RLS policies, auto-create trigger
+    ├── 20260830005405_init.sql              # profiles table, RLS policies, auto-create trigger
+    └── 20260904034640_grant_profiles_access.sql # authenticated table-level grants — RLS alone isn't enough
 .github/workflows/
 ├── migrate.yml                 # Pushes supabase/migrations/** to production
 └── config.yml                  # Pushes supabase/config.toml + templates/** to production (gated by SMTP_CONFIGURED)
