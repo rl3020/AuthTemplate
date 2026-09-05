@@ -10,14 +10,24 @@ import styles from "@/app/(deleteWhenReady)/page.module.css";
 // deployed URL back to Supabase only matters for the Production path (it's
 // about email links, and Free never sends email), so that step lives in
 // the Production branch below, not here.
-const PROMPT_TRUNK = `You're helping me take my copy of the AuthTemplate repo (Next.js + Supabase auth starter) from a fresh clone to a deployed app. Work through these in order. Before moving from one numbered section to the next, check that section off in SETUP_CHECKLIST.md (edit the actual checkbox, don't just tell me it's done) and check in with me — do this at every single section, not just some of them, it's the same step as moving on, not a separate thing to remember.
+function buildPromptTrunk(repoUrl: string) {
+  const step1 = repoUrl.trim()
+    ? `## 1. Get the code
+Check whether the current directory is already this repo (look for "auth-template" in package.json, or check \`git remote -v\`). If not, clone it from ${repoUrl.trim()} — that's the copy I made by clicking "Use this template" on GitHub, not the template repo itself — then cd in.`
+    : `## 1. Get the code
+Check whether the current directory is already this repo (look for "auth-template" in package.json, or check \`git remote -v\`). If not, ask me for the repo URL — the copy I created by clicking "Use this template" on https://github.com/rl3020/AuthTemplate, not the template itself — then clone it and cd in.`;
+
+  return `You're helping me take my copy of the AuthTemplate repo (Next.js + Supabase auth starter) from a fresh clone to a deployed app. Work through these in order. Before moving from one numbered section to the next, check that section off in SETUP_CHECKLIST.md (edit the actual checkbox, don't just tell me it's done) and check in with me — do this at every single section, not just some of them, it's the same step as moving on, not a separate thing to remember.
 
 Rule for the whole thing: never ask me to paste an API key, access token, or password directly into this chat. When a step needs a real secret, either have me paste it straight into a dashboard myself, or run the tool's own secure prompt (\`gh secret set\`, \`vercel env add\`, etc.) — those ask for the value directly in the terminal, hidden, without it ever passing through you.
 
-Before doing anything else, read SETUP_CHECKLIST.md at the repo root — it ships with every checkbox unchecked and mirrors every step below. If any boxes are already checked, resume from the first unchecked one instead of starting over or re-asking me things it already answered (check its Notes section too — that's where earlier facts like my project ref or deployed URL should already be). Whenever you check something off, also add anything later steps will need to the Notes section. Commit that file's changes along with whatever else you're committing at each step, same as any other file — it's meant to be real project history, not scratch state.
+Another rule for the whole thing: never run \`git commit\` or \`git push\` on your own. Stage changes and show me what's about to be committed (\`git status\` / \`git diff\`), then wait for me to say go ahead — every time, not just once at the start. This applies to SETUP_CHECKLIST.md same as any other file.
 
-## 1. Get the code
-Check whether the current directory is already this repo (look for "auth-template" in package.json, or check \`git remote -v\`). If not, ask me for the repo URL — the copy I created by clicking "Use this template" on https://github.com/rl3020/AuthTemplate, not the template itself — then clone it and cd in.
+Whenever you're about to share more than one link with me in a message, put them in a small markdown table (columns: Link, What it's for) instead of a bare list — easier to scan.
+
+Before doing anything else, read SETUP_CHECKLIST.md at the repo root — it ships with every checkbox unchecked and mirrors every step below. If any boxes are already checked, resume from the first unchecked one instead of starting over or re-asking me things it already answered (check its Notes section too — that's where earlier facts like my project ref or deployed URL should already be). Whenever you check something off, also add anything later steps will need to the Notes section, and stage that file's changes along with whatever else you're about to commit at each step, same as any other file — it's meant to be real project history, not scratch state.
+
+${step1}
 
 ## 2. Local setup
 1. Run \`npm install\`.
@@ -52,6 +62,7 @@ Prefer the Vercel CLI so this stays scriptable:
 5. Ask if I want a custom domain instead of the default *.vercel.app one — optional, skip if not. If yes: manual on my end, tell me to add it under the Vercel project → Settings → Domains, add the DNS records Vercel shows at my registrar, and wait for it to verify. Once it's set as the Production domain, VERCEL_PROJECT_PRODUCTION_URL picks it up automatically — no code change needed.
 
 `;
+}
 
 const PROMPT_STEP_8_FREE = `## 8. You're done — nothing else to set up
 SMTP_CONFIGURED already ships "false" at the top of .github/workflows/config.yml, and that's correct as-is — don't change it. Confirm with me that:
@@ -95,9 +106,6 @@ Once everything above is confirmed working: delete the entire src/app/(deleteWhe
 
 Throughout: ask before anything destructive, and stop and tell me plainly if a command fails instead of guessing around it.`;
 
-const PROMPT_TEXT_FREE = PROMPT_TRUNK + PROMPT_STEP_8_FREE + PROMPT_CLEANUP;
-const PROMPT_TEXT_PRODUCTION = PROMPT_TRUNK + PROMPT_STEP_8_PRODUCTION + PROMPT_CLEANUP;
-
 type Version = "free" | "production";
 
 const COLLAPSED_MAX_HEIGHT = 260;
@@ -106,8 +114,13 @@ export function SetupPrompt() {
   const [version, setVersion] = useState<Version>("free");
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [repoUrl, setRepoUrl] = useState("");
 
-  const promptText = version === "free" ? PROMPT_TEXT_FREE : PROMPT_TEXT_PRODUCTION;
+  const trunk = buildPromptTrunk(repoUrl);
+  const promptText =
+    version === "free"
+      ? trunk + PROMPT_STEP_8_FREE + PROMPT_CLEANUP
+      : trunk + PROMPT_STEP_8_PRODUCTION + PROMPT_CLEANUP;
 
   async function handleCopy() {
     await navigator.clipboard.writeText(promptText);
@@ -145,6 +158,23 @@ export function SetupPrompt() {
         (forgot/reset password won&apos;t work); <strong>Production</strong>{" "}
         adds SMTP so it does. Switch anytime by running the other prompt.
       </p>
+      <p className={styles.promptCaption}>
+        You&apos;re in control the whole way through — your agent will ask
+        before committing or pushing anything, and you can always ask it
+        what step it&apos;s on or what&apos;s left to do.
+      </p>
+      <label className={styles.repoUrlLabel} htmlFor="setup-repo-url">
+        Your cloned repo&apos;s URL (optional — fills in step 1 for you)
+      </label>
+      <input
+        id="setup-repo-url"
+        type="text"
+        inputMode="url"
+        className={styles.repoUrlInput}
+        placeholder="https://github.com/your-username/your-repo"
+        value={repoUrl}
+        onChange={(event) => setRepoUrl(event.target.value)}
+      />
       <div className={styles.promptHeaderRow}>
         <div className={styles.versionToggle}>
           <button

@@ -12,8 +12,20 @@ import { WhatsIncluded } from "@/app/(deleteWhenReady)/WhatsIncluded";
 import styles from "@/app/(deleteWhenReady)/page.module.css";
 
 export default function Page() {
+  // process.env.VERCEL is set to "1" on every Vercel deployment (preview and
+  // production alike) — its absence means this is running on someone's own
+  // machine, which is the only place this reminder should show up.
+  const isLocal = !process.env.VERCEL;
+
   return (
     <main className={styles.landing}>
+      {isLocal && (
+        <p className={styles.templateBanner}>
+          👋 This is the AuthTemplate starter home page — it&apos;ll be
+          replaced once you finish setup (see step 9 / &quot;Clean up&quot;
+          below).
+        </p>
+      )}
       <div className={styles.hero}>
         <div className={styles.grid}>
           <div className={styles.guideCol}>
