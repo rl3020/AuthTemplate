@@ -23,7 +23,9 @@ everything's checked and you're done — step 9 does that for you.
 - [ ] **8a. Free** — nothing else to do. Sign-up, login, sessions, protected routes, and settings all work end to end. Forgot/reset password stays off — that's the whole point of this path, not a bug. Revisitable any time via 8b below.
 
 - [ ] **8b. Production** — only if you want working forgot/reset password (and optionally email confirmation):
-  - [ ] Resend (or any SMTP provider): create an account, verify a domain via DNS records at your registrar, generate an API key
+  - [ ] Buy a domain if you don't already have one (GoDaddy, Namecheap, Cloudflare, etc. — any registrar works, it doesn't need to match wherever the app itself is hosted)
+  - [ ] If you also want this same domain to host the app itself (instead of the default `*.vercel.app` URL), connect it under Vercel project → Settings → Domains — see step 7's optional custom-domain bullet. Independent of the SMTP setup below; skip if you're fine with the default Vercel URL
+  - [ ] Resend (or any SMTP provider): create an account, verify that domain via the DNS records it shows you (add them at your registrar), generate an API key
   - [ ] Supabase → Authentication → Emails → SMTP Settings: host `smtp.resend.com`, **port `587`** (not 465 — hangs/times out connecting to Resend), username `resend`, password = the API key, sender email (any address on the verified domain, doesn't need a real inbox) + sender name (both required to save)
   - [ ] Supabase → Authentication → Rate Limits — raise the email limit off the shared-mailer default
   - [ ] `supabase/config.toml` — add a `[remotes.production]` block (with your project ref) overriding `site_url`/`additional_redirect_urls` to your real production URL — this is the literal value substituted into the email templates, not just a redirect allow-list entry

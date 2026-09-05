@@ -65,14 +65,15 @@ Tell me this is revisitable any time — if I ever want working forgot/reset pas
 
 const PROMPT_STEP_8_PRODUCTION = `## 8. Add a real SMTP provider (required for working forgot/reset password)
 This is manual on my end for the dashboard/DNS parts — walk me through it, don't try to do it yourself:
-1. Resend: tell me to create an account at resend.com, go to Domains → Add Domain, and add the TXT/CNAME records it shows me at wherever I bought the domain (GoDaddy, Namecheap, Cloudflare, etc.), under DNS management. This can be a different domain than wherever the app itself is hosted. Tell me to wait until Resend shows the domain as "Verified" before continuing — sending fails until it does, and it can take a few minutes to longer while DNS propagates. Then tell me to go to API Keys → Create API Key — that's a secret, hold onto it, don't paste it here.
-2. Tell me to point Supabase at it: Authentication → Emails → SMTP Settings, enable custom SMTP, and fill in:
+1. Ask if I already own a domain. If not, tell me to buy one first (GoDaddy, Namecheap, Cloudflare, etc. — any registrar works) before continuing. It doesn't need to match wherever the app itself is hosted — if I want the same domain to also host the app instead of the default *.vercel.app URL, that's the custom-domain bullet back in step 7, and it's independent of everything below.
+2. Resend: tell me to create an account at resend.com, go to Domains → Add Domain, and add the TXT/CNAME records it shows me at wherever I bought the domain, under DNS management. Tell me to wait until Resend shows the domain as "Verified" before continuing — sending fails until it does, and it can take a few minutes to longer while DNS propagates. Then tell me to go to API Keys → Create API Key — that's a secret, hold onto it, don't paste it here.
+3. Tell me to point Supabase at it: Authentication → Emails → SMTP Settings, enable custom SMTP, and fill in:
    - Host: smtp.resend.com — Port: 587 (not 465 — Supabase's mailer can hang and time out connecting on 465 with Resend; 587 is the one that actually works, this cost real debugging time)
-   - Username: resend (literally that word) — Password: the API key from step 1
+   - Username: resend (literally that word) — Password: the API key from step 2
    - Sender email: any address on the verified domain, e.g. noreply@mydomain.com — doesn't need to be a real inbox, it's just the From address
    - Sender name: any display name — both this and Sender email are required, the form won't save without them
    Then Authentication → Rate Limits → raise the email limit off Supabase's shared-mailer default.
-3. Connect the deployed URL back to Supabase in code, not just the dashboard — the dashboard field gets silently overwritten back to localhost the next time config push runs, and it's not just about redirects: site_url is the literal value Supabase substitutes into the confirmation/recovery email templates, so getting this wrong means production emails link to localhost even though everything else works. At the bottom of supabase/config.toml, add:
+4. Connect the deployed URL back to Supabase in code, not just the dashboard — the dashboard field gets silently overwritten back to localhost the next time config push runs, and it's not just about redirects: site_url is the literal value Supabase substitutes into the confirmation/recovery email templates, so getting this wrong means production emails link to localhost even though everything else works. At the bottom of supabase/config.toml, add:
 \`\`\`
 [remotes.production]
 project_id = "<my project ref, from step 3 above — not a secret>"
@@ -82,10 +83,10 @@ site_url = "<my production URL>"
 additional_redirect_urls = ["<my production URL>", "<my production URL>/auth/confirm"]
 \`\`\`
 This keeps local dev's site_url as localhost while production gets its own override — supabase config push merges it automatically when pushing to that project ref, no manual toggling.
-4. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/config.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 3.
-5. Tell me to check the Actions tab for "Deploy Supabase Config" (or trigger "Run workflow" on it) — the "Push config" step should now succeed (not skip) and push the custom email templates.
-6. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
-7. Mention that this also makes email confirmation available if I want it — it's a separate opt-in, enable_confirmations stays false in supabase/config.toml's [auth.email] block regardless of SMTP being set up, on purpose. Ask if I want it on; if yes, flip it to true, commit, and push (this applies to both local and production, there's no per-environment override for it the way there is for site_url). Leave it off if I don't say otherwise — sign-up already works fine without it.
+5. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/config.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 4.
+6. Tell me to check the Actions tab for "Deploy Supabase Config" (or trigger "Run workflow" on it) — the "Push config" step should now succeed (not skip) and push the custom email templates.
+7. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
+8. Mention that this also makes email confirmation available if I want it — it's a separate opt-in, enable_confirmations stays false in supabase/config.toml's [auth.email] block regardless of SMTP being set up, on purpose. Ask if I want it on; if yes, flip it to true, commit, and push (this applies to both local and production, there's no per-environment override for it the way there is for site_url). Leave it off if I don't say otherwise — sign-up already works fine without it.
 `;
 
 const PROMPT_CLEANUP = `

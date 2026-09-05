@@ -208,10 +208,11 @@ additional_redirect_urls = ["https://your-app.com", "https://your-app.com/auth/c
 **Before you rely on confirmation emails in production**, know that Supabase's built-in mailer is rate-limited project-wide (a couple of emails per hour, regardless of recipient) — fine for local testing, not for real signups. It also flatly refuses to push custom email templates on the free tier — see the [Prerequisites](#0-prerequisites) caveat, since that's exactly what breaks this template's confirmation-link fix. Fix both under **Authentication → Emails → SMTP Settings** with your own provider, then raise the limit under **Authentication → Rate Limits**. See [Supabase's SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp).
 
 Setting up Resend specifically, end to end:
-1. Create an account, then **Domains → Add Domain**. This can be a different domain than wherever the app is hosted.
-2. Add the TXT/CNAME records Resend shows you at your domain registrar's DNS settings (GoDaddy, Namecheap, Cloudflare, etc.), then wait for Resend to show the domain as **Verified** — usually minutes, sometimes longer while DNS propagates. Sending fails until it flips.
-3. **API Keys → Create API Key** — that's your SMTP password.
-4. In Supabase's SMTP Settings: Host `smtp.resend.com`, **Port `587`** (not `465` — Supabase's mailer can hang and time out connecting to Resend on `465`; `587` is the one that actually works), Username `resend` (literally that word), Password the API key from step 3. Sender email is any address on your verified domain (e.g. `noreply@yourdomain.com`) — it doesn't need to be a real inbox, it's just the `From` header. Sender name is any display name. Both Sender email and Sender name are required — the form won't save without them.
+1. Buy a domain if you don't already have one (GoDaddy, Namecheap, Cloudflare, etc. — any registrar works). It doesn't need to match wherever the app is hosted — if you want the same domain to host the app too, instead of the default `*.vercel.app` URL, see [Custom domain](#vercel) under Deployment → Vercel, independent of everything below.
+2. Create a Resend account, then **Domains → Add Domain** for that domain.
+3. Add the TXT/CNAME records Resend shows you at your domain registrar's DNS settings, then wait for Resend to show the domain as **Verified** — usually minutes, sometimes longer while DNS propagates. Sending fails until it flips.
+4. **API Keys → Create API Key** — that's your SMTP password.
+5. In Supabase's SMTP Settings: Host `smtp.resend.com`, **Port `587`** (not `465` — Supabase's mailer can hang and time out connecting to Resend on `465`; `587` is the one that actually works), Username `resend` (literally that word), Password the API key from step 4. Sender email is any address on your verified domain (e.g. `noreply@yourdomain.com`) — it doesn't need to be a real inbox, it's just the `From` header. Sender name is any display name. Both Sender email and Sender name are required — the form won't save without them.
 
 **Testing it:** always test against your deployed URL, not `localhost` — local dev talks to your local Supabase stack (Mailpit), which is unaffected by any of this. `requestPasswordReset` (and Supabase's `/recover` endpoint underneath it) always shows a "check your email" success response whether or not the account exists, by design, to stop attackers enumerating registered emails — so a successful-looking response doesn't confirm anything actually sent. Use an email that's genuinely registered on the hosted project (**Authentication → Users**), and if nothing arrives, check Resend's own dashboard (**Emails → Sending**) to see whether it even received a send request from Supabase — that tells you which side of the pipe the problem is on before you go looking further.
 
@@ -330,6 +331,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = <your production publishable key>
 ```
 
 `NEXT_PUBLIC_SITE_URL` is optional here — see [What happens on sign-up](#what-happens-on-sign-up) above. Only set it if you're using a custom domain or deploying somewhere other than Vercel.
+
+**Custom domain (optional)** — the default `*.vercel.app` URL works fine on its own. To use your own instead: Vercel project → **Settings → Domains** → add it, then add the DNS records Vercel shows you at your registrar and wait for it to verify. Once it's verified and set as the Production domain, `VERCEL_PROJECT_PRODUCTION_URL` (which `src/lib/site.ts` already falls back to) reflects it automatically — no code change needed.
 
 ### Deploy CI
 

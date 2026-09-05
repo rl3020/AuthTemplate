@@ -299,8 +299,9 @@ const forkTracks: Track[] = [
         description:
           "Resend's free tier works fine for this (3,000 emails/month):",
         bullets: [
-          "Create a Resend account, then Domains → Add Domain — this can be a different domain than wherever the app itself is hosted",
-          "Resend shows you TXT/CNAME records to add — go to wherever you bought the domain (GoDaddy, Namecheap, Cloudflare, etc.) and add them there, under DNS management",
+          "Buy a domain if you don't already have one (GoDaddy, Namecheap, Cloudflare, etc.) — it doesn't need to match wherever the app itself is hosted. If you do want the same domain hosting the app instead of the default *.vercel.app URL, that's the custom-domain step back under Deploy to Vercel, independent of everything below",
+          "Create a Resend account, then Domains → Add Domain for that domain",
+          "Resend shows you TXT/CNAME records to add — go to your registrar's DNS management and add them there",
           "Wait for Resend to show the domain as \"Verified\" — usually minutes, occasionally longer while DNS propagates. Sending fails until it flips",
           "API Keys → Create API Key — that's your SMTP password",
         ],
