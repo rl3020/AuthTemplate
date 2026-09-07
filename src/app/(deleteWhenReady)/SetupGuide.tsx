@@ -221,6 +221,12 @@ const sections: Section[] = [
         linkLabel: "GitHub docs: manually running a workflow",
       },
       {
+        title: "Double-check the SMTP_CONFIGURED repo variable while you're in here",
+        description:
+          'Repo → Settings → Secrets and variables → Actions → Variables tab — there shouldn\'t be an SMTP_CONFIGURED variable there yet, which is what makes .github/workflows/config.yml skip the email-config push by default. Some copies of this template were generated from an earlier version of it that hardcoded "true" straight into the file, which makes that workflow try to push email config on a Free-tier project with no SMTP set up, and Supabase rejects it with a 403.',
+        note: "If you find SMTP_CONFIGURED already set to \"true\" and you haven't set up SMTP yet, delete it — see the Production track below for when you actually want it on.",
+      },
+      {
         title: "Adding your own migration later looks like this",
         panelLabel: "Example: your next migration",
         commands: [
@@ -348,10 +354,10 @@ const forkTracks: Track[] = [
         title: "Flip the flag and ship it",
         flag: {
           label: "SMTP_CONFIGURED",
-          value: "false",
+          value: "unset (defaults to false)",
           body: "Skipped by default — migrations still deploy either way. To enable:",
           bullets: [
-            'Set SMTP_CONFIGURED to "true" in .github/workflows/config.yml, commit, push',
+            'Add SMTP_CONFIGURED = true as a repo variable (not a file edit — so it stays yours and never leaks into a fresh fork of this template): gh variable set SMTP_CONFIGURED --body true --repo <owner>/<repo> if you have the gh CLI, or repo → Settings → Secrets and variables → Actions → Variables tab otherwise',
             'Actions tab → "Deploy Supabase Config" → "Run workflow" — config push should now succeed (not skip) and deploy your custom templates',
             "Test against your deployed URL, not localhost — request a password reset for an email that's actually registered on the hosted project (Authentication → Users)",
             "The UI always shows \"check your email\" whether or not an account exists — that's deliberate, to stop attackers probing which emails are registered. If nothing arrives, check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells you which side the problem is on",

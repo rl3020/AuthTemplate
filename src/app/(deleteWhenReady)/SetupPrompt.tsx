@@ -56,6 +56,8 @@ Three are needed: SUPABASE_ACCESS_TOKEN (from step 4), SUPABASE_PROJECT_REF (fro
 ## 6. First migrations
 supabase/migrations/ already has two — nothing to create. One creates the profiles table with RLS policies; the other grants the authenticated role actual table-level access to it (RLS alone doesn't grant that — without it, every fresh hosted project hits "permission denied for table profiles" the moment anything touches it, even though local dev looks completely fine, since supabase start/db reset bootstraps default grants locally that a hosted project doesn't get). Both apply automatically the first time the "Deploy Supabase Migrations" GitHub Actions workflow runs after step 5. Tell me to trigger it: repo's Actions tab → "Deploy Supabase Migrations" → "Run workflow" button (it has a manual trigger built in, no new commit needed). This workflow only handles migrations — auth/email config is a separate "Deploy Supabase Config" workflow, covered in the Production path below.
 
+Before moving on, check my repo's Settings → Secrets and variables → Actions → Variables tab for an \`SMTP_CONFIGURED\` variable — there shouldn't be one yet (some copies of this template were generated from an earlier version that hardcoded "true" straight into .github/workflows/config.yml, which makes that workflow try to push email config on a Free-tier project with no SMTP set up, and Supabase rejects it with a 403). If you find one already set to "true" and I haven't set up SMTP yet, delete it before continuing.
+
 If I ever ask you to add a new table later: enable RLS, add policies, *and* explicitly grant select/insert/update/delete on it to authenticated in the same migration — db reset won't catch a missing grant, only a real deploy will, so this is easy to miss.
 
 ## 7. Deploy to Vercel
@@ -70,7 +72,7 @@ Prefer the Vercel CLI so this stays scriptable:
 }
 
 const PROMPT_STEP_8_FREE = `## 8. You're done — nothing else to set up
-SMTP_CONFIGURED already ships "false" at the top of .github/workflows/config.yml, and that's correct as-is — don't change it. Confirm with me that:
+There's no SMTP_CONFIGURED repo variable set, and that's correct as-is — don't add one. Confirm with me that:
 - Sign-up, login, sessions, protected routes, and the settings page all work end to end.
 - Forgot/reset password does *not* work yet — that's expected on this path, not a bug. It only needs Supabase's free tier and no domain purchase, which is the whole point of this path.
 
@@ -99,7 +101,7 @@ site_url = "<my production URL>"
 additional_redirect_urls = ["<my production URL>", "<my production URL>/auth/confirm"]
 \`\`\`
 Left unedited, config push either no-ops (the ref won't match mine) or, if it somehow did, would aim at the template author's own project — not mine. This keeps local dev's site_url as localhost while production gets its own override — supabase config push merges it automatically when pushing to that project ref, no manual toggling.
-5. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/config.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 4.
+5. Add a repo variable, not a file edit — this is what flips the config-push step from skipped to active. Deliberately a repo variable rather than something committed in .github/workflows/config.yml, so this stays specific to my repo and never leaks into a fresh fork of the template. If the \`gh\` CLI is installed and authenticated against my repo, just run \`gh variable set SMTP_CONFIGURED --body true --repo <owner>/<repo>\` yourself — no need to involve me. If \`gh\` isn't available, tell me to add it manually at my repo → Settings → Secrets and variables → Actions → Variables tab, and wait for me to confirm. Either way, still commit and push the config.toml change from step 4 separately, same as before.
 6. Tell me to check the Actions tab for "Deploy Supabase Config" (or trigger "Run workflow" on it) — the "Push config" step should now succeed (not skip) and push the custom email templates.
 7. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
 8. Mention that this also makes email confirmation available if I want it — it's a separate opt-in, enable_confirmations stays false in supabase/config.toml's [auth.email] block regardless of SMTP being set up, on purpose. Ask if I want it on; if yes, flip it to true, commit, and push (this applies to both local and production, there's no per-environment override for it the way there is for site_url). Leave it off if I don't say otherwise — sign-up already works fine without it.
@@ -108,6 +110,8 @@ Left unedited, config push either no-ops (the ref won't match mine) or, if it so
 const PROMPT_CLEANUP = `
 ## 9. Clean up
 Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. (Project naming and layout.tsx's metadata were already handled back in step 2 — nothing left to rename here.) Also delete SETUP_CHECKLIST.md — it was only ever meant to track this setup, not stick around afterward.
+
+Then clean up README.md, which still describes this as the template rather than my app: rewrite the title and the "Quickstart" intro section (tech stack / "What's already wired" / "What's not" — that's template-pitch copy, not documentation of my app) to describe what I'm actually building. Also update the "Routing" table — drop the /dashboard row once that example page is deleted, and adjust anything else there that no longer matches reality.
 
 Throughout: ask before anything destructive, and stop and tell me plainly if a command fails instead of guessing around it.`;
 

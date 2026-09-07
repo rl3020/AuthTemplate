@@ -9,19 +9,24 @@ on:
       - "supabase/templates/**"
   # Lets you manually re-run this against the current main branch from the
   # Actions tab (Run workflow button) without needing a new commit — handy
-  # for testing after flipping SMTP_CONFIGURED or fixing a secret.
+  # for testing after setting the SMTP_CONFIGURED repo variable or fixing
+  # a secret.
   workflow_dispatch:
 
 jobs:
   config:
     runs-on: ubuntu-latest
-    # Flip to "true" once SMTP is set up under Authentication → Emails →
-    # SMTP Settings — see README Prerequisites for why this exists. Lives
-    # here (committed) rather than as a GitHub repo variable so it's not a
-    # dashboard setting someone has to remember to click through — same
-    # reasoning as supabase/config.toml's additional_redirect_urls.
+    # Reads an optional repo variable (Settings → Secrets and variables →
+    # Actions → Variables tab), falling back to "false" if it's unset —
+    # which it always is on a fresh fork, since repo variables aren't
+    # copied by GitHub's "Use this template". Set it to "true" there once
+    # SMTP is set up under Authentication → Emails → SMTP Settings (see
+    # README Prerequisites) — deliberately NOT a literal committed value
+    # here, so this repo (which is both the template source and its own
+    # live deployment) can safely have its own variable set to "true"
+    # without that leaking into what new forks start with.
     env:
-      SMTP_CONFIGURED: "true"
+      SMTP_CONFIGURED: ${{ vars.SMTP_CONFIGURED || 'false' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -41,8 +46,8 @@ jobs:
       # always attempted-and-caught: catching Supabase's error text by
       # string match would silently break the moment they reword it, and
       # would just as silently swallow a *real* config error too. Until the
-      # flag is flipped, this step is skipped, and forgot/reset password
-      # just isn't wired up yet.
+      # repo variable is set, this step is skipped, and forgot/reset
+      # password just isn't wired up yet.
       - name: Push config (auth settings, email templates) to production
         if: env.SMTP_CONFIGURED == 'true'
         run: supabase config push
@@ -52,4 +57,4 @@ jobs:
 
       - name: Skip email template push (SMTP not configured)
         if: env.SMTP_CONFIGURED != 'true'
-        run: echo "::warning::Skipping email template push — SMTP_CONFIGURED is 'false' at the top of this workflow file. Forgot/reset password won't work until it's flipped to 'true'. See README Prerequisites."
+        run: echo "::warning::Skipping email template push — the SMTP_CONFIGURED repo variable isn't set to 'true' (Settings → Secrets and variables → Actions → Variables tab). Forgot/reset password won't work until it is. See README Prerequisites."
