@@ -11,7 +11,7 @@ everything's checked and you're done — step 9 does that for you.
 ## Trunk — same regardless of which path you pick
 
 - [ ] **1. Get the code** — clone your own copy (the one you got from "Use this template" on GitHub, not the template repo itself).
-- [ ] **2. Local setup** — `npm install`; confirm Docker is running (`docker info`); `npx supabase start` and note the local API URL + Publishable key it prints; copy `.env.example` → `.env.local` and fill those in (leave `NEXT_PUBLIC_SITE_URL` as `http://localhost:3000`); `npm run dev` and confirm `http://localhost:3000` loads.
+- [ ] **2. Local setup** — `npm install`; confirm Docker is running (`docker info`); `npx supabase start` and note the local API URL + Publishable key it prints; copy `.env.example` → `.env.local` and fill those in (leave `NEXT_PUBLIC_SITE_URL` as `http://localhost:3000`); `npm run dev` and confirm `http://localhost:3000` loads. Then rename it from the template's own identity to yours, now rather than at final cleanup: `supabase/config.toml`'s top-level `project_id` (line 5, still says `"auth-template"` — purely a local dev label, but it's why `supabase start` prints "auth-template" until you change it) and `src/app/layout.tsx`'s metadata title/description. Leave the `[remotes.production]` block further down in `config.toml` alone for now — separate placeholder, only matters for 8b below.
 - [ ] **3. Create a hosted Supabase project** — supabase.com/dashboard → New project. Set a DB password when prompted and write it down (Supabase won't show it again). Once it's provisioned, note the Project URL, Publishable key (Project Settings → API), and the project ref (the string in the dashboard URL, also under Project Settings → General).
 - [ ] **4. Generate a Supabase access token** — dashboard → Account → Access Tokens, scoped to this project. Real secret, don't paste it anywhere but a secure prompt.
 - [ ] **5. Add GitHub repository secrets** — `SUPABASE_ACCESS_TOKEN` (step 4), `SUPABASE_PROJECT_REF` (step 3), `SUPABASE_DB_PASSWORD` (step 3) at repo → Settings → Secrets and variables → Actions → New repository secret.
@@ -28,7 +28,7 @@ everything's checked and you're done — step 9 does that for you.
   - [ ] Resend (or any SMTP provider): create an account, verify that domain via the DNS records it shows you (add them at your registrar), generate an API key
   - [ ] Supabase → Authentication → Emails → SMTP Settings: host `smtp.resend.com`, **port `587`** (not 465 — hangs/times out connecting to Resend), username `resend`, password = the API key, sender email (any address on the verified domain, doesn't need a real inbox) + sender name (both required to save)
   - [ ] Supabase → Authentication → Rate Limits — raise the email limit off the shared-mailer default
-  - [ ] `supabase/config.toml` — add a `[remotes.production]` block (with your project ref) overriding `site_url`/`additional_redirect_urls` to your real production URL — this is the literal value substituted into the email templates, not just a redirect allow-list entry
+  - [ ] `supabase/config.toml` — a `[remotes.production]` block already exists near the bottom, but it still holds the *template author's* project ref and domain (a placeholder). Edit it in place (don't add a second one) with your own project ref and real production URL for `site_url`/`additional_redirect_urls` — `site_url` is the literal value substituted into the email templates, not just a redirect allow-list entry. Left unedited, config push either no-ops (ref won't match) or, if it somehow did, would aim at the template author's own project
   - [ ] `.github/workflows/config.yml` — flip `SMTP_CONFIGURED` to `"true"`, commit, push
   - [ ] Actions tab → "Deploy Supabase Config" → Run workflow — confirm the "Push config" step succeeds (not skipped)
   - [ ] Test a real password reset against the *deployed* URL (not localhost) using an email that's genuinely registered (Authentication → Users) — the UI always shows "check your email" regardless, so check Resend's own dashboard (Emails → Sending) if nothing arrives
@@ -36,7 +36,7 @@ everything's checked and you're done — step 9 does that for you.
 
 ## Finish
 
-- [ ] **9. Clean up** — delete `src/app/(deleteWhenReady)/` (onboarding content, safe to remove — isolated route group, won't break `/auth/*`, `/settings`, or `src/lib/`), update the title/description in `src/app/layout.tsx`'s metadata, and delete this file.
+- [ ] **9. Clean up** — delete `src/app/(deleteWhenReady)/` (onboarding content, safe to remove — isolated route group, won't break `/auth/*`, `/settings`, or `src/lib/`) and delete this file. (Project naming and `layout.tsx`'s metadata were already handled back in step 2 — nothing left to rename here.)
 
 ## Notes
 

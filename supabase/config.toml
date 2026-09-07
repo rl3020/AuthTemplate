@@ -2,6 +2,9 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
+# Still says "auth-template" (the template author's own label) until you rename it — cosmetic
+# only, but it's why `supabase start` prints "auth-template" for containers/output on a fresh
+# clone. Rename it to your own project name early (setup step 2), not just at final cleanup.
 project_id = "auth-template"
 
 [api]
@@ -409,6 +412,13 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # A remote whose project_id matches gets these specific keys merged on top
 # instead, so production can have its own site_url/redirect list without
 # sharing (or fighting over) the localhost ones local dev needs.
+#
+# The block below still holds the TEMPLATE AUTHOR'S OWN project ref and domain —
+# it's a placeholder, not a working default. Harmless on the Free path (it only
+# activates when project_id matches the project being pushed to, and yours won't —
+# plus Free never runs the config-push workflow at all). If you go Production,
+# EDIT this block in place to your own ref/domain — don't leave it and don't add
+# a second one alongside it.
 [remotes.production]
 project_id = "vnhblbyydefrgsjsqiwm"
 

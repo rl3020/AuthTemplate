@@ -10,12 +10,16 @@ import styles from "@/app/(deleteWhenReady)/page.module.css";
 // deployed URL back to Supabase only matters for the Production path (it's
 // about email links, and Free never sends email), so that step lives in
 // the Production branch below, not here.
-function buildPromptTrunk(repoUrl: string) {
+function buildPromptTrunk(repoUrl: string, projectName: string) {
   const step1 = repoUrl.trim()
     ? `## 1. Get the code
 Check whether the current directory is already this repo (look for "auth-template" in package.json, or check \`git remote -v\`). If not, clone it from ${repoUrl.trim()} — that's the copy I made by clicking "Use this template" on GitHub, not the template repo itself — then cd in.`
     : `## 1. Get the code
 Check whether the current directory is already this repo (look for "auth-template" in package.json, or check \`git remote -v\`). If not, ask me for the repo URL — the copy I created by clicking "Use this template" on https://github.com/rl3020/AuthTemplate, not the template itself — then clone it and cd in.`;
+
+  const nameStep = projectName.trim()
+    ? `6. Rename it from the template's own identity to mine, now rather than at final cleanup: in supabase/config.toml, change the top-level \`project_id\` on line 5 from "auth-template" to "${projectName.trim()}" (purely a local dev label — it's why \`supabase start\` printed "auth-template" before this, not a bug, just confusing to leave). Then update the title and description in src/app/layout.tsx's metadata to match. Leave the \`[remotes.production]\` block further down in config.toml alone for now — that's a separate placeholder (the template author's own Supabase ref and domain) that only matters if I pick the Production path in step 8.`
+    : `6. Ask me for a short project name (e.g. "my-app"), then rename it from the template's own identity to mine, now rather than at final cleanup: in supabase/config.toml, change the top-level \`project_id\` on line 5 from "auth-template" to that name (purely a local dev label — it's why \`supabase start\` printed "auth-template" before this, not a bug, just confusing to leave). Then update the title and description in src/app/layout.tsx's metadata to match. Leave the \`[remotes.production]\` block further down in config.toml alone for now — that's a separate placeholder (the template author's own Supabase ref and domain) that only matters if I pick the Production path in step 8.`;
 
   return `You're helping me take my copy of the AuthTemplate repo (Next.js + Supabase auth starter) from a fresh clone to a deployed app. Work through these in order. Before moving from one numbered section to the next, check that section off in SETUP_CHECKLIST.md (edit the actual checkbox, don't just tell me it's done) and check in with me — do this at every single section, not just some of them, it's the same step as moving on, not a separate thing to remember.
 
@@ -35,6 +39,7 @@ ${step1}
 3. Run \`npx supabase start\` and read the local API URL and Publishable key it prints.
 4. Copy \`.env.example\` to \`.env.local\`, fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY with those local values, and leave NEXT_PUBLIC_SITE_URL as http://localhost:3000.
 5. Run \`npm run dev\` and confirm http://localhost:3000 loads. Ask me to confirm it looks right before continuing.
+${nameStep}
 
 ## 3. Create a hosted Supabase project
 This part is manual on my end — walk me through it, don't try to do it yourself:
@@ -84,7 +89,7 @@ This is manual on my end for the dashboard/DNS parts — walk me through it, don
    - Sender email: any address on the verified domain, e.g. noreply@mydomain.com — doesn't need to be a real inbox, it's just the From address
    - Sender name: any display name — both this and Sender email are required, the form won't save without them
    Then Authentication → Rate Limits → raise the email limit off Supabase's shared-mailer default.
-4. Connect the deployed URL back to Supabase in code, not just the dashboard — the dashboard field gets silently overwritten back to localhost the next time config push runs, and it's not just about redirects: site_url is the literal value Supabase substitutes into the confirmation/recovery email templates, so getting this wrong means production emails link to localhost even though everything else works. At the bottom of supabase/config.toml, add:
+4. Connect the deployed URL back to Supabase in code, not just the dashboard — the dashboard field gets silently overwritten back to localhost the next time config push runs, and it's not just about redirects: site_url is the literal value Supabase substitutes into the confirmation/recovery email templates, so getting this wrong means production emails link to localhost even though everything else works. supabase/config.toml already ships a \`[remotes.production]\` block near the bottom — that's the template author's own project ref and domain, a placeholder, not something to leave as-is or duplicate. Edit it in place (don't add a second one) to swap in mine:
 \`\`\`
 [remotes.production]
 project_id = "<my project ref, from step 3 above — not a secret>"
@@ -93,7 +98,7 @@ project_id = "<my project ref, from step 3 above — not a secret>"
 site_url = "<my production URL>"
 additional_redirect_urls = ["<my production URL>", "<my production URL>/auth/confirm"]
 \`\`\`
-This keeps local dev's site_url as localhost while production gets its own override — supabase config push merges it automatically when pushing to that project ref, no manual toggling.
+Left unedited, config push either no-ops (the ref won't match mine) or, if it somehow did, would aim at the template author's own project — not mine. This keeps local dev's site_url as localhost while production gets its own override — supabase config push merges it automatically when pushing to that project ref, no manual toggling.
 5. Edit SMTP_CONFIGURED to "true" at the top of .github/workflows/config.yml — this is what flips the config-push step from skipped to active. Commit and push this together with the config.toml change from step 4.
 6. Tell me to check the Actions tab for "Deploy Supabase Config" (or trigger "Run workflow" on it) — the "Push config" step should now succeed (not skip) and push the custom email templates.
 7. Have me actually request a password reset on the *deployed* app (not localhost) using an email that's genuinely registered on the hosted project (Authentication → Users) — the UI always shows "check your email" regardless of whether the account exists, by design, so a successful-looking response alone doesn't confirm anything. If nothing arrives, tell me to check Resend's own dashboard (Emails → Sending) to see whether it even received a send request — that tells us which side of the pipe the problem is on before we go looking further.
@@ -102,7 +107,7 @@ This keeps local dev's site_url as localhost while production gets its own overr
 
 const PROMPT_CLEANUP = `
 ## 9. Clean up
-Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. Then update the title and description in src/app/layout.tsx's metadata to match my real project name. Also delete SETUP_CHECKLIST.md — it was only ever meant to track this setup, not stick around afterward.
+Once everything above is confirmed working: delete the entire src/app/(deleteWhenReady)/ folder — onboarding content only (this landing page, the setup guide, an example dashboard), safe to remove since it's an isolated route group and won't break /auth/*, /settings, or src/lib/. (Project naming and layout.tsx's metadata were already handled back in step 2 — nothing left to rename here.) Also delete SETUP_CHECKLIST.md — it was only ever meant to track this setup, not stick around afterward.
 
 Throughout: ask before anything destructive, and stop and tell me plainly if a command fails instead of guessing around it.`;
 
@@ -115,8 +120,18 @@ export function SetupPrompt() {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [repoUrl, setRepoUrl] = useState("");
+  const [projectName, setProjectName] = useState("");
 
-  const trunk = buildPromptTrunk(repoUrl);
+  // Falls back to the repo name (last path segment of the URL) so the field
+  // isn't mandatory busywork when the URL above already implies it.
+  const derivedName = repoUrl.trim()
+    .replace(/\/+$/, "")
+    .replace(/\.git$/i, "")
+    .split("/")
+    .pop();
+  const effectiveName = projectName.trim() || derivedName || "";
+
+  const trunk = buildPromptTrunk(repoUrl, effectiveName);
   const promptText =
     version === "free"
       ? trunk + PROMPT_STEP_8_FREE + PROMPT_CLEANUP
@@ -174,6 +189,18 @@ export function SetupPrompt() {
         placeholder="https://github.com/your-username/your-repo"
         value={repoUrl}
         onChange={(event) => setRepoUrl(event.target.value)}
+      />
+      <label className={styles.repoUrlLabel} htmlFor="setup-project-name">
+        Your project&apos;s name (optional — defaults to the repo name above;
+        renames supabase/config.toml and the page title/metadata for you)
+      </label>
+      <input
+        id="setup-project-name"
+        type="text"
+        className={styles.repoUrlInput}
+        placeholder={derivedName || "my-app"}
+        value={projectName}
+        onChange={(event) => setProjectName(event.target.value)}
       />
       <div className={styles.promptHeaderRow}>
         <div className={styles.versionToggle}>

@@ -126,6 +126,17 @@ const sections: Section[] = [
         ],
         commands: ["cp .env.example .env.local", "npm run dev"],
       },
+      {
+        title: "Rename it from the template's identity to yours",
+        description:
+          'Do this now, not just at final cleanup — otherwise every "supabase start" print, container name, and browser tab keeps saying "auth-template" instead of your app while you work.',
+        bullets: [
+          'supabase/config.toml, line 5 — top-level project_id: "auth-template" → your project name (purely a local dev label, cosmetic, but confusing to leave)',
+          "src/app/layout.tsx — the title/description in its metadata export",
+        ],
+        noteTitle: "Leave the [remotes.production] block alone here",
+        note: 'Further down in config.toml there\'s a separate [remotes.production] block — that one still holds the template author\'s own Supabase project ref and domain. It\'s a placeholder that only matters if you pick the Production track below; editing it is covered there, not here.',
+      },
     ],
   },
   {
@@ -321,7 +332,7 @@ const forkTracks: Track[] = [
       {
         title: "Fix site_url so emails link to production, not localhost",
         description:
-          "site_url isn't just a redirect allow-list entry — it's the literal value Supabase substitutes into the email templates. Leave it as localhost in the base [auth] block (local dev needs that), and add an override at the bottom of supabase/config.toml instead:",
+          "site_url isn't just a redirect allow-list entry — it's the literal value Supabase substitutes into the email templates. Leave it as localhost in the base [auth] block (local dev needs that). A [remotes.production] block already exists near the bottom of supabase/config.toml, but it still holds the template author's own project ref and domain — edit it in place (don't add a second one) to swap in yours:",
         panelLabel: "supabase/config.toml",
         commands: [
           "[remotes.production]",
@@ -331,7 +342,7 @@ const forkTracks: Track[] = [
           'site_url = "<your production URL>"',
           'additional_redirect_urls = ["<your production URL>", "<your production URL>/auth/confirm"]',
         ],
-        note: "A project ref isn't a secret — it's already public in your NEXT_PUBLIC_SUPABASE_URL — so this is safe to commit. supabase config push merges this override automatically when pushing to that project ref; local dev keeps using localhost.",
+        note: "A project ref isn't a secret — it's already public in your NEXT_PUBLIC_SUPABASE_URL — so this is safe to commit. Left unedited, config push either no-ops (the ref won't match yours) or, if it somehow did, would aim at the template author's own project. supabase config push merges this override automatically when pushing to that project ref; local dev keeps using localhost.",
       },
       {
         title: "Flip the flag and ship it",
